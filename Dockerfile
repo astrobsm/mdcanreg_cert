@@ -40,5 +40,5 @@ ENV FLASK_APP=backend/app.py
 # Expose the port
 EXPOSE 8080
 
-# Run gunicorn with 4 worker processes
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "wsgi:app"]
+# Run gunicorn with optimized settings for Digital Ocean
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "--keep-alive", "5", "--log-level", "debug", "wsgi:app"]
