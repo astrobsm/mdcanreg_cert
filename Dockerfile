@@ -24,8 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy backend requirements and install dependencies
 COPY backend/requirements.txt .
 
-# Install numpy first to ensure compatibility
+# Install numpy and pandas first to ensure compatibility
 RUN pip install --no-cache-dir numpy==1.24.3
+RUN pip install --no-cache-dir pandas==1.5.3
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
