@@ -23,13 +23,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy backend requirements and install dependencies
 COPY backend/requirements.txt .
+
+# Install numpy first to ensure compatibility
+RUN pip install --no-cache-dir numpy==1.24.3
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
 COPY backend/ ./backend/
 
-# Copy the simplified app.py entry point
+# Copy the entry point and fallback app
 COPY app.py .
+COPY fallback_app.py .
 
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/build ./frontend/build
