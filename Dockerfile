@@ -28,6 +28,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ ./backend/
 
+# Copy the simplified app.py entry point
+COPY app.py .
+
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
@@ -35,10 +38,10 @@ COPY --from=frontend-build /app/frontend/build ./frontend/build
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 ENV FLASK_ENV=production
-ENV FLASK_APP=backend/app.py
+ENV FLASK_APP=app.py
 
 # Expose the port
 EXPOSE 8080
 
-# Run gunicorn with optimized settings for Digital Ocean
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "--keep-alive", "5", "--log-level", "debug", "wsgi:app"]
+# Run gunicorn with optimized settings
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120", "--log-level", "debug", "app:app"]
