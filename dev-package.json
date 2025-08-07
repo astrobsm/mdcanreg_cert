@@ -1,0 +1,13 @@
+{
+  "name": "dev",
+  "version": "1.0.0",
+  "scripts": {
+    "backend": "cd backend && python app.py",
+    "frontend": "npm start",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "setup-backend": "cd backend && python -m venv venv && venv\\Scripts\\activate && pip install -r requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

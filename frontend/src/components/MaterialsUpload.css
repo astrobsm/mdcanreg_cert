@@ -1,0 +1,251 @@
+/* Materials Upload Component Styles */
+.materials-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.materials-container h2 {
+  color: #008000;
+  margin-bottom: 5px;
+}
+
+.materials-container > p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.error-message, .success-message {
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #c62828;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
+}
+
+.materials-form-container {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.materials-form-container h3 {
+  color: #008000;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.materials-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .materials-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group input[type="file"] {
+  padding: 8px 0;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 12px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn-primary {
+  background-color: #008000;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #006700;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-danger {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #d32f2f;
+}
+
+.materials-list-container {
+  margin-top: 30px;
+}
+
+.materials-list-container h3 {
+  color: #008000;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.no-items {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.material-card {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.material-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.material-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.material-details h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.material-type {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.material-description {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.material-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #777;
+  margin-bottom: 15px;
+}
+
+.material-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.material-status {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.status-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.published {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.unpublished {
+  background-color: #fafafa;
+  color: #757575;
+}

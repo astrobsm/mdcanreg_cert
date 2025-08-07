@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-natiss_natiss}
+      POSTGRES_DB: ${DB_NAME:-mdcan042_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - mdcan-network
+
+  # Combined frontend and backend application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-5000}:5000"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-natiss_natiss}@postgres/${DB_NAME:-mdcan042_db}
+      - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_FROM=${EMAIL_FROM:-MDCAN BDM 2025 <sylvia4douglas@gmail.com>}
+      - FLASK_ENV=production
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - mdcan-network
+
+networks:
+  mdcan-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

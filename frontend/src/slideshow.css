@@ -1,0 +1,264 @@
+/* Custom banner and slideshow styles */
+.app-header {
+  background: #008000 !important; /* Green header */
+  padding: 1rem 2rem;
+  color: white;
+}
+
+.countdown-banner {
+  font-family: 'Orbitron', monospace !important;
+  position: relative;
+  width: 100%;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #008000, #00b300);
+  box-shadow: 0 4px 30px rgba(0, 255, 0, 0.4);
+  color: #ffffff;
+  border-bottom: 3px solid #00ff00;
+  text-align: center;
+  animation: glow 3s infinite alternate;
+}
+
+.organization-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.countdown-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 8px;
+}
+
+.countdown-value {
+  font-family: 'Digital-7', 'Orbitron', monospace;
+  font-size: 2.5rem;
+  font-weight: bold;
+  background: #ff0000;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+}
+
+.countdown-label {
+  font-size: 0.8rem;
+  margin-top: 5px;
+  color: white;
+  font-weight: bold;
+}
+
+.countdown-separator {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #ff0000;
+  margin: 0 5px;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+.countdown-text {
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 2px;
+  margin-top: 5px;
+}
+
+/* Sidebar styles */
+.sidebar {
+  font-family: 'Orbitron', monospace !important;
+  position: fixed;
+  left: 0;
+  top: 70px; /* Below the header banner */
+  bottom: 0;
+  width: 250px;
+  background: linear-gradient(135deg, #008000, #00b300);
+  color: white;
+  z-index: 9999;
+  padding: 20px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 4px 20px rgba(0, 255, 0, 0.3); }
+  100% { box-shadow: 0 4px 30px rgba(0, 255, 0, 0.6); }
+}
+
+/* Slideshow styles */
+.flier-slideshow {
+  width: 100%;
+  max-width: 900px;
+  margin: 20px auto;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,128,0,0.2);
+  height: 400px;
+}
+
+.slideshow-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+
+.slideshow-slide.active {
+  opacity: 1;
+}
+
+.slideshow-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slideshow-dots {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.slideshow-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid #ccc;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.slideshow-dot.active {
+  background: #008000;
+  border: 2px solid white;
+  transform: scale(1.2);
+}
+
+/* Adjust app for fixed banner and sidebar */
+.App {
+  margin-top: 80px;
+  position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .flier-slideshow {
+    height: 350px;
+    max-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .flier-slideshow {
+    height: 300px;
+    max-width: 100%;
+    margin: 15px auto;
+  }
+  
+  .App {
+    margin-left: 0;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .sidebar-toggle {
+    display: block;
+    position: fixed;
+    left: 10px;
+    top: 85px;
+    z-index: 10001;
+    background: #008000;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .countdown-banner {
+    padding: 10px;
+  }
+  
+  .organization-name {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .flier-slideshow {
+    height: 250px;
+    border-radius: 10px;
+  }
+  
+  .slideshow-dots {
+    bottom: 10px;
+  }
+  
+  .slideshow-dot {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .countdown-item {
+    margin: 0 5px;
+  }
+  
+  .countdown-value {
+    font-size: 1.8rem;
+    min-width: 45px;
+  }
+  
+  .countdown-separator {
+    font-size: 1.8rem;
+    margin: 0 2px;
+  }
+}
+
+@media (max-width: 360px) {
+  .flier-slideshow {
+    height: 200px;
+  }
+  
+  .organization-name {
+    font-size: 1rem;
+  }
+  
+  .countdown-text {
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,77 @@
+/* Optimized CSS selectors for better performance */
+
+/* 
+* Performance optimization:
+* 1. Avoid deeply nested selectors
+* 2. Use class selectors instead of type selectors
+* 3. Avoid the universal selector (*) when possible
+* 4. Limit specificity which slows down matching
+*/
+
+/* Fast rendering selectors */
+.button-primary {
+  background-color: var(--primary-color);
+  color: white;
+  transition: background-color var(--transition-fast);
+}
+
+.button-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Optimize layout calculations */
+.sidebar-fixed {
+  position: fixed;
+  will-change: transform; /* Hint for browser optimization */
+  contain: layout; /* Improves performance by isolating this element */
+}
+
+/* Hardware acceleration for animations */
+.countdown-digits {
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize image loading */
+.lazy-image {
+  content-visibility: auto; /* Only render when visible */
+  contain-intrinsic-size: 400px 300px; /* Estimate size for layout before loading */
+}
+
+/* Use GPU for heavy animations */
+@keyframes optimized-glow {
+  0% { 
+    transform: translateZ(0);
+    box-shadow: 0 4px 20px rgba(0, 255, 0, 0.3); 
+  }
+  100% { 
+    transform: translateZ(0);
+    box-shadow: 0 4px 30px rgba(0, 255, 0, 0.6); 
+  }
+}
+
+/* Font loading optimization */
+@font-face {
+  font-family: 'Orbitron';
+  font-display: swap; /* Prevent FOIT (Flash of Invisible Text) */
+  src: url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+}
+
+/* Add efficient media queries */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* Loading indicator optimization */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

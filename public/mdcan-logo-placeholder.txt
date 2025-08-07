@@ -1,0 +1,12 @@
+# Placeholder for MDCAN Logo
+
+This file should be replaced with the official MDCAN logo image.
+
+**File requirements:**
+- Format: PNG (recommended for transparent background)
+- Dimensions: Approximately 200x200 pixels (square format preferred)
+- Background: Transparent
+- File name: `mdcan-logo.png`
+- Quality: High resolution for print quality (300 DPI minimum)
+
+Please replace this file with the actual MDCAN logo before deploying the application.

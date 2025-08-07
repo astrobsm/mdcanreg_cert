@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        h1 {
+            color: #1a365d;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .test-section h2 {
+            color: #2d5aa0;
+            border-bottom: 1px solid #d4af37;
+            padding-bottom: 10px;
+        }
+        .image-test {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .image-test h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-image {
+            max-width: 200px;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+            border: 1px dashed #999;
+            padding: 5px;
+        }
+        .status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .certificate-preview {
+            margin-top: 40px;
+            width: 100%;
+            border: 2px solid #d4af37;
+            padding: 10px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .certificate-preview h2 {
+            text-align: center;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+        .api-test {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #1a365d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2d5aa0;
+        }
+        #results {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Certificate Assets Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Individual Asset Tests</h2>
+        
+        <div class="image-test">
+            <h3>MDCAN Logo Test</h3>
+            <img src="/serve_asset/mdcan-logo.png" alt="MDCAN Logo" class="test-image" onerror="this.nextElementSibling.innerHTML='❌ Error loading image'; this.nextElementSibling.className='status error';">
+            <div class="status success">✅ Image loaded successfully</div>
+        </div>
+        
+        <div class="image-test">
+            <h3>Coal City Logo Test</h3>
+            <img src="/serve_asset/coalcity-logo.png" alt="Coal City Logo" class="test-image" onerror="this.nextElementSibling.innerHTML='❌ Error loading image'; this.nextElementSibling.className='status error';">
+            <div class="status success">✅ Image loaded successfully</div>
+        </div>
+        
+        <div class="image-test">
+            <h3>President Signature Test</h3>
+            <img src="/serve_asset/president-signature.png" alt="President Signature" class="test-image" onerror="this.nextElementSibling.innerHTML='❌ Error loading image'; this.nextElementSibling.className='status error';">
+            <div class="status success">✅ Image loaded successfully</div>
+        </div>
+        
+        <div class="image-test">
+            <h3>Chairman Signature Test</h3>
+            <img src="/serve_asset/chairman-signature.png" alt="Chairman Signature" class="test-image" onerror="this.nextElementSibling.innerHTML='❌ Error loading image'; this.nextElementSibling.className='status error';">
+            <div class="status success">✅ Image loaded successfully</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>API Test Results</h2>
+        
+        <div class="api-test">
+            <button id="testSignaturesButton">Test Signatures API</button>
+            <div id="results">Click the button above to test the signatures API</div>
+        </div>
+    </div>
+    
+    <div class="certificate-preview">
+        <h2>Certificate Preview</h2>
+        <iframe id="certificateFrame" src="about:blank"></iframe>
+        <button id="loadCertificateButton">Load Sample Certificate</button>
+    </div>
+
+    <script>
+        document.getElementById('testSignaturesButton').addEventListener('click', async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/test_signatures');
+                const data = await response.json();
+                resultsDiv.innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultsDiv.innerHTML = `Error: ${error.message}`;
+            }
+        });
+        
+        document.getElementById('loadCertificateButton').addEventListener('click', function() {
+            const iframe = document.getElementById('certificateFrame');
+            
+            // URL for a sample certificate
+            const sampleHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0.3in;
+        }
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .certificate-container {
+            position: relative;
+            border: 8px solid #d4af37;
+            border-image: linear-gradient(45deg, #d4af37, #ffd700, #b8860b) 1;
+            padding: 50px 40px;
+            min-height: 480px;
+            background: white;
+            background-blend-mode: overlay;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .golden-seal {
+            position: absolute;
+            top: -20px;
+            right: 50%;
+            transform: translateX(50%);
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #ffd700 0%, #d4af37 70%, #b8860b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            z-index: 10;
+        }
+        .seal-text {
+            font-size: 12px;
+            font-weight: bold;
+            color: #8b4513;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .certificate-title {
+            font-size: 42px;
+            font-weight: bold;
+            color: #1a365d;
+            margin: 40px 0 30px 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(45deg, #1a365d, #2d5aa0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .certificate-text {
+            font-size: 22px;
+            line-height: 1.8;
+            margin: 18px 0;
+            color: #2d3748;
+            text-align: center;
+            font-weight: 400;
+        }
+        .participant-name {
+            font-size: 36px;
+            font-weight: bold;
+            color: #c53030;
+            margin: 35px 0;
+            text-align: center;
+            text-decoration: underline;
+            text-decoration-color: #d4af37;
+            text-decoration-thickness: 3px;
+            font-family: 'Times New Roman', serif;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        .event-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 30px 0;
+            color: #1a365d;
+            text-align: center;
+            background: linear-gradient(45deg, #1a365d, #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .signatures {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 60px;
+            position: relative;
+        }
+        .signature {
+            text-align: center;
+            width: 280px;
+            position: relative;
+        }
+        .signature-image {
+            height: 70px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        .signature-line {
+            border-bottom: 3px solid #d4af37;
+            width: 220px;
+            margin: 15px auto;
+            position: relative;
+        }
+        .signature-line::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 1px;
+            background: #b8860b;
+        }
+        .signature-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+            color: #1a365d;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        .signature-title {
+            font-size: 16px;
+            margin-top: 8px;
+            color: #4a5568;
+            font-style: italic;
+        }
+        .decorative-border {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 2px solid #d4af37;
+            border-radius: 15px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .corner-ornament {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #d4af37 0%, #b8860b 100%);
+            border-radius: 50%;
+        }
+        .corner-ornament.top-left {
+            top: 10px;
+            left: 10px;
+        }
+        .corner-ornament.top-right {
+            top: 10px;
+            right: 10px;
+        }
+        .corner-ornament.bottom-left {
+            bottom: 10px;
+            left: 10px;
+        }
+        .corner-ornament.bottom-right {
+            bottom: 10px;
+            right: 10px;
+        }
+        .conference-details {
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.1) 50%, rgba(212, 175, 55, 0.1) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <div class="decorative-border"></div>
+        <div class="corner-ornament top-left"></div>
+        <div class="corner-ornament top-right"></div>
+        <div class="corner-ornament bottom-left"></div>
+        <div class="corner-ornament bottom-right"></div>
+        
+        <!-- Headers section to ensure proper display -->
+        <div class="header-section">
+            <img src="/serve_asset/mdcan-logo.png" alt="MDCAN Logo" class="logo">
+            <div class="golden-seal">
+                <div class="seal-text">
+                    MDCAN<br>
+                    BDM<br>
+                    2025
+                </div>
+            </div>
+            <img src="/serve_asset/coalcity-logo.png" alt="Coal City Logo" class="logo">
+        </div>
+        
+        <div>
+            <div class="certificate-title">
+                CERTIFICATE OF PARTICIPATION
+            </div>
+            
+            <div class="certificate-text">
+                This is to certify that
+            </div>
+
+            <div class="participant-name">
+                Dr. John Smith
+            </div>
+
+            <div class="certificate-text">
+                participated in the
+            </div>
+
+            <div class="conference-details">
+                <div class="event-name">
+                    MDCAN BDM 14th – 2025
+                </div>
+                
+                <div class="certificate-text">
+                    held in Enugu on 1st – 6th September, 2025
+                </div>
+            </div>
+        </div>
+        
+        <div class="signatures">
+            <div class="signature">
+                <img src="/serve_asset/president-signature.png" alt="President Signature" class="signature-image">
+                <div class="signature-line"></div>
+                <div class="signature-name">Dr. Darlington Akukwu</div>
+                <div class="signature-title">President</div>
+            </div>
+            
+            <div class="signature">
+                <img src="/serve_asset/chairman-signature.png" alt="Chairman Signature" class="signature-image">
+                <div class="signature-line"></div>
+                <div class="signature-name">Dr. Augustine Duru</div>
+                <div class="signature-title">LOC Secretary<br>MDCAN Sec. Gen.</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+            
+            // Create a blob from the HTML content
+            const blob = new Blob([sampleHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            // Load the HTML in the iframe
+            iframe.src = url;
+        });
+    </script>
+</body>
+</html>

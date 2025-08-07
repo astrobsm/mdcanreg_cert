@@ -1,0 +1,37 @@
+[
+  {
+    "endpoint": "/api/health",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "endpoint": "/api/stats",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "endpoint": "/api/participants",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "endpoint": "/api/participants/count",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "endpoint": "/api/programs",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "endpoint": "/api/announcements",
+    "status": "success",
+    "code": 200
+  },
+  {
+    "endpoint": "/api/materials",
+    "status": "success",
+    "code": 200
+  }
+]

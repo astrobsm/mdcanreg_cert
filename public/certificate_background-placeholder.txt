@@ -1,0 +1,12 @@
+# Placeholder for Certificate Background Image
+
+This file should be replaced with the certificate background image.
+
+**File requirements:**
+- Format: PNG or JPG (PNG recommended for transparency)
+- Dimensions: A4 ratio (2480x3508 pixels for 300 DPI)
+- File name: `certificate_background.png` or `certificate_background.jpg`
+- Quality: High resolution for print quality (300 DPI minimum)
+- Design: Should complement the golden seal and text elements
+
+Please replace this file with the actual certificate background image before deploying the application.

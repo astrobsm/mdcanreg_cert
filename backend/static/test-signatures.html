@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Signatures</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .signature {
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .signature-image {
+            height: 100px;
+        }
+        .signature-title {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .note {
+            margin-top: 40px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Signatures</h1>
+    
+    <div class="signature">
+        <h3>Direct Image Test (President)</h3>
+        <img src="/president-signature.png" alt="President Signature" class="signature-image">
+        <div class="signature-title">Direct path to president-signature.png</div>
+    </div>
+    
+    <div class="signature">
+        <h3>Direct Image Test (Chairman)</h3>
+        <img src="/chairman-signature.png" alt="Chairman Signature" class="signature-image">
+        <div class="signature-title">Direct path to chairman-signature.png</div>
+    </div>
+    
+    <div class="signature">
+        <h3>Serve Asset Endpoint Test (President)</h3>
+        <img src="/serve_asset/president-signature.png" alt="President Signature" class="signature-image">
+        <div class="signature-title">Using /serve_asset/president-signature.png</div>
+    </div>
+    
+    <div class="signature">
+        <h3>Serve Asset Endpoint Test (Chairman)</h3>
+        <img src="/serve_asset/chairman-signature.png" alt="Chairman Signature" class="signature-image">
+        <div class="signature-title">Using /serve_asset/chairman-signature.png</div>
+    </div>
+    
+    <div class="signature">
+        <h3>Static Directory Test (President)</h3>
+        <img src="/static/president-signature.png" alt="President Signature" class="signature-image">
+        <div class="signature-title">Using /static/president-signature.png</div>
+    </div>
+    
+    <div class="signature">
+        <h3>Static Directory Test (Chairman)</h3>
+        <img src="/static/chairman-signature.png" alt="Chairman Signature" class="signature-image">
+        <div class="signature-title">Using /static/chairman-signature.png</div>
+    </div>
+    
+    <div class="note">
+        <p>This page tests different ways of accessing the signature images. If any of these images load correctly, it confirms that the signatures are accessible via that specific path.</p>
+        <p>Check the browser's network tab or console for any errors related to the image loading.</p>
+    </div>
+</body>
+</html>

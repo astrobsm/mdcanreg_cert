@@ -1,0 +1,52 @@
+{
+  "name": "mdcan-14th-biennial-delegates-meeting-scientific-conference",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build:dev": "GENERATE_SOURCEMAP=true react-scripts build",
+    "build:safe": "INLINE_RUNTIME_CHUNK=false GENERATE_SOURCEMAP=false react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "dev": "start-development.bat",
+    "quick": "start-quick.bat",
+    "dev-mode": "start-dev-mode.bat",
+    "reset": "reset-environment.bat"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "compression-webpack-plugin": "^11.1.0",
+    "image-minimizer-webpack-plugin": "^4.1.3",
+    "terser-webpack-plugin": "^5.3.14"
+  }
+}

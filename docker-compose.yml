@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: natiss_natiss
+      POSTGRES_DB: mdcan042_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/create_comprehensive_database.sql:/docker-entrypoint-initdb.d/create_comprehensive_database.sql
+    restart: unless-stopped
+
+  # Backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app/backend
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://postgres:natiss_natiss@postgres/mdcan042_db
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=sylvia4douglas@gmail.com
+      - EMAIL_PASSWORD=your-app-password
+      - EMAIL_FROM=MDCAN BDM 2025 <sylvia4douglas@gmail.com>
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Frontend development server
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
