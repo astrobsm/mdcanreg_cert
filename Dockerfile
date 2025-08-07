@@ -41,4 +41,4 @@ ENV FLASK_APP=backend/app.py
 EXPOSE 8080
 
 # Run gunicorn with 4 worker processes
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "backend.app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "wsgi:app"]
