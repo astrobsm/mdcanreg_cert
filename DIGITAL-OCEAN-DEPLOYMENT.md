@@ -47,6 +47,9 @@ Digital Ocean's App Platform provides the simplest way to deploy the application
      ```
      gunicorn --bind 0.0.0.0:$PORT do_app:app
      ```
+   - Alternatively, just use the provided Dockerfile and let Digital Ocean detect it
+     - No build or run commands are needed in this case
+     - Digital Ocean will use the Dockerfile which properly handles the PORT environment variable
    - Click "Deploy to Production"
    - Wait for the build and deployment to complete
    - If the app fails to deploy, check the logs for specific errors
