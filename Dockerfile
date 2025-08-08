@@ -47,6 +47,7 @@ RUN touch backend/__init__.py
 # Copy the entry point and fallback app
 COPY app.py .
 COPY fallback_app.py .
+COPY do_app.py .
 
 # Make sure minimal_app.py exists in backend directory
 RUN test -f backend/minimal_app.py || echo "Minimal app not found in backend directory"
@@ -64,4 +65,4 @@ ENV FLASK_APP=app.py
 EXPOSE 8080
 
 # Run gunicorn with optimized settings and detailed error logging
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "debug", "--capture-output", "--enable-stdio-inheritance", "--preload", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "debug", "--capture-output", "--enable-stdio-inheritance", "--preload", "do_app:app"]
