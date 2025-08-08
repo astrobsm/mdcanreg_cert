@@ -39,16 +39,16 @@ Digital Ocean's App Platform provides the simplest way to deploy the application
    - Digital Ocean will automatically add the connection string to your environment
 
 5. **Deploy the application**:
-   - **IMPORTANT**: For Digital Ocean App Platform, we now use a fixed port (8080) approach
+   - **CRITICAL FOR DIGITAL OCEAN APP PLATFORM**: Use the following exact settings
    - Just use the provided Dockerfile and let Digital Ocean detect it
+     - The Dockerfile is specially configured for Digital Ocean App Platform
      - No build or run commands are needed
-     - The Dockerfile uses a fixed port 8080 which Digital Ocean App Platform expects
-   - If you want to use custom commands instead of the Dockerfile:
+   - If you prefer to use custom commands:
      - Build command: `pip install -r backend/requirements.txt`
-     - Run command: `gunicorn --bind 0.0.0.0:8080 do_app:app`
+     - Run command: `gunicorn --bind 0.0.0.0:8080 digital_ocean_app:app`
    - Click "Deploy to Production"
    - Wait for the build and deployment to complete
-   - If the app fails to deploy, check the logs for specific errors
+   - **IMPORTANT**: Check logs immediately after deployment for any issues
 
 ### Option 2: Deploy using Droplets and Docker
 
@@ -187,19 +187,21 @@ For more control over your server environment, you can use Digital Ocean Droplet
      ```
 
 5. **Failed Health Checks and PORT Issues**:
-   - Digital Ocean App Platform expects apps to run on port 8080
-   - The app now uses a fixed port 8080 instead of relying on the $PORT environment variable
-   - The app has a `/health` endpoint that Digital Ocean uses for health checks
+   - **CRITICAL**: Digital Ocean App Platform expects apps to run on port 8080
+   - We now use a specialized entry point file: `digital_ocean_app.py`
+   - This file provides a guaranteed working health check endpoint
    - If you're still having issues:
-     - Check the application logs for specific error messages
-     - Make sure there are no startup errors preventing the app from running
-     - Try deploying with explicit settings instead of relying on the Dockerfile:
+     - Delete your app and create a new one
+     - Use the GitHub source and let Digital Ocean detect the Dockerfile
+     - Do NOT specify custom build or run commands
+     - Use the custom command only as a last resort:
        ```
        # Build command
        pip install -r backend/requirements.txt
        
-       # Run command - use explicit 8080 port, not $PORT
-       gunicorn --bind 0.0.0.0:8080 do_app:app
+       # Run command - use fixed port 8080
+       gunicorn --bind 0.0.0.0:8080 digital_ocean_app:app
        ```
+   - If health checks still fail, try increasing the health check timeout in your app settings
 
 For additional support, consult the project documentation or contact the development team.

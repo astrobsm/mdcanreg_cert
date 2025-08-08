@@ -44,11 +44,12 @@ COPY backend/ ./backend/
 # Create an empty __init__.py to make the backend directory a proper package
 RUN touch backend/__init__.py
 
-# Copy the entry point and fallback app
+# Copy the entry point files
 COPY app.py .
 COPY fallback_app.py .
 COPY do_app.py .
 COPY docker_startup.sh .
+COPY digital_ocean_app.py .
 
 # Make the startup script executable
 RUN chmod +x docker_startup.sh
@@ -59,14 +60,14 @@ RUN test -f backend/minimal_app.py || echo "Minimal app not found in backend dir
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
-# Set environment variables
+# Set environment variables - CRITICAL for Digital Ocean
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
 ENV FLASK_ENV=production
-ENV FLASK_APP=do_app.py
+ENV FLASK_APP=digital_ocean_app.py
 
-# Expose the port (this is just for documentation - it doesn't actually publish the port)
+# Expose port 8080 - Digital Ocean App Platform requires this port
 EXPOSE 8080
 
-# Directly run gunicorn with fixed port 8080 - this is what Digital Ocean App Platform expects
-CMD gunicorn --bind 0.0.0.0:8080 --workers 1 --timeout 120 --log-level debug --access-logfile=- --error-logfile=- do_app:app
+# IMPORTANT: Use the simplest possible command for Digital Ocean
+# This bypasses any issues with shell variable expansion
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-", "digital_ocean_app:app"]
