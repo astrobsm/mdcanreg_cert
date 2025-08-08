@@ -28,19 +28,28 @@ Digital Ocean's App Platform provides the simplest way to deploy the application
 3. **Configure your app**:
    - Set the following environment variables:
      - `DATABASE_URL`: Your PostgreSQL connection string
-     - `EMAIL_HOST`: SMTP server for sending emails
-     - `EMAIL_PORT`: SMTP port
-     - `EMAIL_USER`: SMTP username
-     - `EMAIL_PASSWORD`: SMTP password
-     - `EMAIL_FROM`: From address for sent emails
+     - `EMAIL_HOST`: SMTP server for sending emails (e.g., smtp.gmail.com)
+     - `EMAIL_PORT`: SMTP port (usually 587 for TLS)
+     - `EMAIL_USER`: SMTP username (your email address)
+     - `EMAIL_PASSWORD`: SMTP password (app password for Gmail)
+     - `EMAIL_FROM`: From address for sent emails (e.g., "MDCAN BDM 2025 <noreply@mdcan.org>")
 
 4. **Configure database**:
    - Add a PostgreSQL database from the Resources tab
    - Digital Ocean will automatically add the connection string to your environment
 
 5. **Deploy the application**:
+   - Set the following build command:
+     ```
+     pip install -r backend/requirements.txt
+     ```
+   - Set the following run command:
+     ```
+     gunicorn --bind 0.0.0.0:$PORT do_app:app
+     ```
    - Click "Deploy to Production"
    - Wait for the build and deployment to complete
+   - If the app fails to deploy, check the logs for specific errors
 
 ### Option 2: Deploy using Droplets and Docker
 
@@ -163,5 +172,19 @@ For more control over your server environment, you can use Digital Ocean Droplet
 3. **Certificate generation issues**:
    - Check if wkhtmltopdf is installed correctly
    - Verify file permissions for temporary directories
+
+4. **404 Errors on App Platform**:
+   - Check the application logs in Digital Ocean dashboard for specific errors
+   - Verify that the run command is set correctly (should be `gunicorn --bind 0.0.0.0:$PORT app:app`)
+   - Make sure the PORT environment variable is being used correctly
+   - Ensure the static files are being served correctly
+   - Try redeploying the app with the minimal version using explicit commands:
+     ```
+     # Build command
+     pip install -r backend/requirements.txt
+     
+     # Run command
+     python -c "import os; from backend.minimal_app import app; port = int(os.environ.get('PORT', 8080)); app.run(host='0.0.0.0', port=port)"
+     ```
 
 For additional support, consult the project documentation or contact the development team.

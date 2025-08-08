@@ -94,9 +94,61 @@ python app.py
 
 The backend will run on `http://localhost:5000`
 
-### Docker Compose Setup (Recommended)
+## Digital Ocean App Platform Deployment
 
-We provide Docker Compose configuration for both development and production environments:
+To deploy the application on Digital Ocean App Platform:
+
+1. **Prepare your repository**:
+   - Push your code to a GitHub repository
+   - Ensure all files are committed, including `do_app.py`
+
+2. **Create a new App on Digital Ocean**:
+   - Log in to your Digital Ocean account
+   - Go to "Apps" and click "Create App"
+   - Select "GitHub" as the source
+   - Select your repository and branch
+
+3. **Configure your app**:
+   - Set the following build command:
+     ```
+     pip install -r backend/requirements.txt
+     ```
+   - Set the following run command:
+     ```
+     gunicorn --bind 0.0.0.0:$PORT do_app:app
+     ```
+
+4. **Set environment variables**:
+   - `DATABASE_URL`: Your PostgreSQL connection string
+   - `EMAIL_HOST`: SMTP server for sending emails (e.g., smtp.gmail.com)
+   - `EMAIL_PORT`: SMTP port (usually 587 for TLS)
+   - `EMAIL_USER`: SMTP username (your email address)
+   - `EMAIL_PASSWORD`: SMTP password (app password for Gmail)
+   - `EMAIL_FROM`: From address for sent emails (e.g., "MDCAN BDM 2025 <noreply@mdcan.org>")
+
+5. **Add a database**:
+   - In the Resources tab, add a PostgreSQL database
+   - Digital Ocean will automatically set the DATABASE_URL environment variable
+
+6. **Deploy the application**:
+   - Click "Deploy to Production"
+   - Wait for the build and deployment to complete
+
+### Troubleshooting 404 Errors
+
+If you see a 404 error after deployment:
+
+1. Check the logs in the Digital Ocean dashboard for specific errors
+2. Verify that all environment variables are set correctly
+3. Make sure the run command is set exactly as shown above
+4. Try redeploying the app with the minimal version explicitly:
+   ```
+   # Run command alternative
+   python -c "import os; from backend.minimal_app import app; port = int(os.environ.get('PORT', 8080)); app.run(host='0.0.0.0', port=port)"
+   ```
+5. If problems persist, try using the `do_app.py` entrypoint which is specifically designed for Digital Ocean
+
+## Docker Compose Setup (Recommended)
 
 #### Development Setup
 
