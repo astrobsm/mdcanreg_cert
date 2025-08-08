@@ -72,54 +72,54 @@ except Exception as e:
         logger.info("Trying minimal backend app...")
         from backend.minimal_app import app
         logger.info("Minimal backend app loaded successfully.")
-        return
+        # Successfully loaded minimal app, continue with this app
     except Exception as minimal_error:
         logger.error(f"Error loading minimal backend app: {str(minimal_error)}")
-    
-    logger.info("Falling back to minimal application...")
-    
-    # Import the fallback minimal app
-    try:
-        from fallback_app import app
-        logger.info("Fallback application loaded successfully.")
-    except Exception as fallback_error:
-        logger.error(f"Error loading fallback app: {str(fallback_error)}")
         
-        # If even the fallback app fails, create a super minimal app
-        from flask import Flask, jsonify
-        app = Flask(__name__)
+        logger.info("Falling back to minimal application...")
         
-        @app.route('/')
-        def emergency_home():
-            return jsonify({
-                "status": "degraded",
-                "message": "Emergency Fallback Mode",
-                "error": str(e),
-                "exception_type": str(type(e).__name__),
-                "path_info": {
-                    "cwd": os.getcwd(),
-                    "sys_path": sys.path
-                }
-            })
-        
-        @app.route('/debug')
-        def debug_info():
-            """Return debug information to help diagnose deployment issues."""
-            return jsonify({
-                "status": "debug",
-                "environment": dict(os.environ),
-                "directory_structure": {
-                    "root": os.listdir("."),
-                    "backend_exists": os.path.exists("backend"),
-                    "backend_contents": os.listdir("backend") if os.path.exists("backend") else "N/A"
-                },
-                "python_info": {
-                    "version": sys.version,
-                    "path": sys.path
-                }
-            })
-        
-        logger.info("Emergency minimal application created.")
+        # Import the fallback minimal app
+        try:
+            from fallback_app import app
+            logger.info("Fallback application loaded successfully.")
+        except Exception as fallback_error:
+            logger.error(f"Error loading fallback app: {str(fallback_error)}")
+            
+            # If even the fallback app fails, create a super minimal app
+            from flask import Flask, jsonify
+            app = Flask(__name__)
+            
+            @app.route('/')
+            def emergency_home():
+                return jsonify({
+                    "status": "degraded",
+                    "message": "Emergency Fallback Mode",
+                    "error": str(e),
+                    "exception_type": str(type(e).__name__),
+                    "path_info": {
+                        "cwd": os.getcwd(),
+                        "sys_path": sys.path
+                    }
+                })
+            
+            @app.route('/debug')
+            def debug_info():
+                """Return debug information to help diagnose deployment issues."""
+                return jsonify({
+                    "status": "debug",
+                    "environment": dict(os.environ),
+                    "directory_structure": {
+                        "root": os.listdir("."),
+                        "backend_exists": os.path.exists("backend"),
+                        "backend_contents": os.listdir("backend") if os.path.exists("backend") else "N/A"
+                    },
+                    "python_info": {
+                        "version": sys.version,
+                        "path": sys.path
+                    }
+                })
+            
+            logger.info("Emergency minimal application created.")
 
 # Direct execution (for local testing)
 if __name__ == "__main__":
