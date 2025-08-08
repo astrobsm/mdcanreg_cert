@@ -178,7 +178,7 @@ For more control over your server environment, you can use Digital Ocean Droplet
 
 4. **404 Errors on App Platform**:
    - Check the application logs in Digital Ocean dashboard for specific errors
-   - Verify that the run command is set correctly (should be `gunicorn --bind 0.0.0.0:$PORT app:app`)
+   - Verify that the run command is set correctly (should be `gunicorn --bind 0.0.0.0:$PORT do_app:app`)
    - Make sure the PORT environment variable is being used correctly
    - Ensure the static files are being served correctly
    - Try redeploying the app with the minimal version using explicit commands:
@@ -189,5 +189,12 @@ For more control over your server environment, you can use Digital Ocean Droplet
      # Run command
      python -c "import os; from backend.minimal_app import app; port = int(os.environ.get('PORT', 8080)); app.run(host='0.0.0.0', port=port)"
      ```
+
+5. **Failed Health Checks**:
+   - The app has a `/health` endpoint that Digital Ocean uses for health checks
+   - Make sure the PORT environment variable is being handled correctly
+   - Check if there are firewall rules blocking the port
+   - Verify the application is actually running by checking the logs
+   - If using a custom command, make sure it binds to the correct port (the $PORT environment variable)
 
 For additional support, consult the project documentation or contact the development team.
