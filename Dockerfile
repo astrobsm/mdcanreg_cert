@@ -29,8 +29,11 @@ RUN pip install --no-cache-dir numpy==1.24.3
 RUN pip install --no-cache-dir pandas==1.5.3
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
+# Copy backend code - ensure it goes into a proper backend directory
 COPY backend/ ./backend/
+
+# Create an empty __init__.py to make the backend directory a proper package
+RUN touch backend/__init__.py
 
 # Copy the entry point and fallback app
 COPY app.py .
@@ -48,5 +51,5 @@ ENV FLASK_APP=app.py
 # Expose the port
 EXPOSE 8080
 
-# Run gunicorn with optimized settings
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120", "--log-level", "debug", "app:app"]
+# Run gunicorn with optimized settings and detailed error logging
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120", "--log-level", "debug", "--capture-output", "--enable-stdio-inheritance", "app:app"]
