@@ -32,6 +32,8 @@ RUN pip uninstall -y numpy pandas
 # Install specific versions with binary compatibility
 RUN pip install --no-cache-dir numpy==1.21.6
 RUN pip install --no-cache-dir pandas==1.3.5
+# Install schedule package explicitly
+RUN pip install --no-cache-dir schedule==1.2.0
 # Install other requirements but skip numpy and pandas
 RUN grep -v "numpy\|pandas" requirements.txt > filtered_requirements.txt
 RUN pip install --no-cache-dir -r filtered_requirements.txt

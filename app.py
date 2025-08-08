@@ -35,6 +35,17 @@ try:
         logger.info(f"Numpy version: {numpy.__version__}")
         import pandas
         logger.info(f"Pandas version: {pandas.__version__}")
+        
+        # Check for schedule package
+        try:
+            import schedule
+            logger.info(f"Schedule version: {schedule.__version__}")
+        except ImportError:
+            logger.warning("Schedule package not found, installing...")
+            import subprocess
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "schedule"])
+            import schedule
+            logger.info(f"Schedule installed and imported, version: {schedule.__version__}")
     except ValueError as ve:
         if "numpy.dtype size changed" in str(ve):
             logger.error("Binary incompatibility between numpy and pandas detected")
@@ -50,14 +61,38 @@ try:
     # Try multiple import paths to be more robust
     try:
         # Import Flask app from the backend/app.py file (standard path)
-        from backend.app import app as application
-        logger.info("Main application imported successfully from backend.app.")
+        # Use importlib to avoid circular imports
+        import importlib.util
+        import importlib
+        
+        # First check if backend module is available
+        if importlib.util.find_spec("backend") is not None:
+            logger.info("Backend module found, attempting to import app")
+            # Import the backend app module
+            backend_app = importlib.import_module("backend.app")
+            # Get the app object from the module
+            application = getattr(backend_app, "app")
+            logger.info("Main application imported successfully from backend.app.")
+        else:
+            logger.warning("Backend module not found, trying direct import")
+            # Try alternative import using spec
+            spec = importlib.util.spec_from_file_location("backend_app", os.path.join(current_dir, "backend", "app.py"))
+            backend_app = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(backend_app)
+            application = backend_app.app
+            logger.info("Main application imported successfully using spec loader.")
     except ImportError as e:
         logger.warning(f"Failed to import from backend.app: {e}")
         # Try alternative import path
         sys.path.insert(0, os.path.join(current_dir, 'backend'))
-        from app import app as application
-        logger.info("Main application imported successfully from direct app import.")
+        try:
+            # Rename the import to avoid conflict with the current module
+            import app as backend_app
+            application = backend_app.app
+            logger.info("Main application imported successfully from direct app import.")
+        except ImportError as ie:
+            logger.error(f"All import methods failed: {ie}")
+            raise
     
     # Alias the application as 'app' for Gunicorn
     app = application
