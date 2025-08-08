@@ -105,9 +105,36 @@ except Exception as e:
     # Try the minimal backend app first
     try:
         logger.info("Trying minimal backend app...")
-        from backend.minimal_app import app
+        from backend.minimal_app import app as minimal_app
         logger.info("Minimal backend app loaded successfully.")
         # Successfully loaded minimal app, continue with this app
+        app = minimal_app
+        
+        # Add a route to indicate we're running the minimal app
+        from flask import jsonify
+        @app.route('/api/status')
+        def enhanced_status():
+            """Enhanced status endpoint to show we're running in minimal mode"""
+            return jsonify({
+                "status": "ok",
+                "mode": "minimal",
+                "message": "Running minimal app with full API functionality",
+                "version": "minimal",
+                "available_endpoints": [
+                    "/api/health",
+                    "/api/test", 
+                    "/api/participants",
+                    "/api/certificates/{id}",
+                    "/api/send-certificate/{id}",
+                    "/api/statistics",
+                    "/api/bulk/participants"
+                ],
+                "environment": {
+                    "python_version": sys.version,
+                    "database_url": bool(os.environ.get('DATABASE_URL')),
+                    "email_configured": bool(os.environ.get('EMAIL_HOST'))
+                }
+            })
     except Exception as minimal_error:
         logger.error(f"Error loading minimal backend app: {str(minimal_error)}")
         
