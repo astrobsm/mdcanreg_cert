@@ -68,5 +68,5 @@ ENV FLASK_APP=do_app.py
 # Expose the port (this is just for documentation - it doesn't actually publish the port)
 EXPOSE 8080
 
-# Use our startup script that properly handles the PORT environment variable
-CMD ["./docker_startup.sh"]
+# Directly run gunicorn with fixed port 8080 - this is what Digital Ocean App Platform expects
+CMD gunicorn --bind 0.0.0.0:8080 --workers 1 --timeout 120 --log-level debug --access-logfile=- --error-logfile=- do_app:app

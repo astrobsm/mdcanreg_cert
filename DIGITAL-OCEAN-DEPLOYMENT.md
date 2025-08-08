@@ -39,17 +39,13 @@ Digital Ocean's App Platform provides the simplest way to deploy the application
    - Digital Ocean will automatically add the connection string to your environment
 
 5. **Deploy the application**:
-   - Set the following build command:
-     ```
-     pip install -r backend/requirements.txt
-     ```
-   - Set the following run command:
-     ```
-     gunicorn --bind 0.0.0.0:$PORT do_app:app
-     ```
-   - Alternatively, just use the provided Dockerfile and let Digital Ocean detect it
-     - No build or run commands are needed in this case
-     - Digital Ocean will use the Dockerfile which properly handles the PORT environment variable
+   - **IMPORTANT**: For Digital Ocean App Platform, we now use a fixed port (8080) approach
+   - Just use the provided Dockerfile and let Digital Ocean detect it
+     - No build or run commands are needed
+     - The Dockerfile uses a fixed port 8080 which Digital Ocean App Platform expects
+   - If you want to use custom commands instead of the Dockerfile:
+     - Build command: `pip install -r backend/requirements.txt`
+     - Run command: `gunicorn --bind 0.0.0.0:8080 do_app:app`
    - Click "Deploy to Production"
    - Wait for the build and deployment to complete
    - If the app fails to deploy, check the logs for specific errors
@@ -190,11 +186,20 @@ For more control over your server environment, you can use Digital Ocean Droplet
      python -c "import os; from backend.minimal_app import app; port = int(os.environ.get('PORT', 8080)); app.run(host='0.0.0.0', port=port)"
      ```
 
-5. **Failed Health Checks**:
+5. **Failed Health Checks and PORT Issues**:
+   - Digital Ocean App Platform expects apps to run on port 8080
+   - The app now uses a fixed port 8080 instead of relying on the $PORT environment variable
    - The app has a `/health` endpoint that Digital Ocean uses for health checks
-   - Make sure the PORT environment variable is being handled correctly
-   - Check if there are firewall rules blocking the port
-   - Verify the application is actually running by checking the logs
-   - If using a custom command, make sure it binds to the correct port (the $PORT environment variable)
+   - If you're still having issues:
+     - Check the application logs for specific error messages
+     - Make sure there are no startup errors preventing the app from running
+     - Try deploying with explicit settings instead of relying on the Dockerfile:
+       ```
+       # Build command
+       pip install -r backend/requirements.txt
+       
+       # Run command - use explicit 8080 port, not $PORT
+       gunicorn --bind 0.0.0.0:8080 do_app:app
+       ```
 
 For additional support, consult the project documentation or contact the development team.

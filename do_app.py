@@ -6,27 +6,22 @@ import os
 import sys
 import logging
 
-# Configure logging
+# Configure logging to output to stdout
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-# Get port from environment variable (Digital Ocean sets this)
-try:
-    port_str = os.environ.get('PORT')
-    if port_str is None:
-        logging.info("PORT environment variable not found, defaulting to 8080")
-        port = 8080
-    else:
-        logging.info(f"Found PORT environment variable: '{port_str}'")
-        port = int(port_str)
-        logging.info(f"Successfully parsed PORT to integer: {port}")
-except ValueError as e:
-    logging.error(f"Error parsing PORT value: '{port_str}': {str(e)}")
-    logging.info("Defaulting to port 8080")
-    port = 8080
+# Log all environment variables for debugging (except sensitive ones)
+for key, value in sorted(os.environ.items()):
+    if not any(sensitive in key.lower() for sensitive in ['password', 'secret', 'key']):
+        logging.info(f"Environment variable: {key}={value}")
+
+# Set a fixed port for Digital Ocean - this is critical
+# Digital Ocean App Platform requires the app to listen on port 8080
+PORT = 8080
+logging.info(f"Using fixed port {PORT} for Digital Ocean App Platform")
 
 # Import the Flask app after setting up logging and port
 try:
@@ -41,5 +36,5 @@ except ImportError as e:
 # The 'app' variable is what gunicorn will import
 
 if __name__ == "__main__":
-    logging.info(f"Starting server on port {port}")
-    app.run(host='0.0.0.0', port=port)
+    logging.info(f"Starting server on port {PORT}")
+    app.run(host='0.0.0.0', port=PORT)
