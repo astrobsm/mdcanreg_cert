@@ -362,6 +362,11 @@ def health():
     """Health check endpoint"""
     return jsonify({"status": "ok"})
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Digital Ocean"""
+    return jsonify({"status": "healthy"})
+
 @app.route('/api/test')
 def test():
     """Test endpoint"""

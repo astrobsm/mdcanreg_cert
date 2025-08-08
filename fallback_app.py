@@ -19,6 +19,14 @@ def home():
             "EMAIL_CONFIG": bool(os.environ.get('EMAIL_HOST'))
         }
     })
+    
+@app.route('/health')
+def health_check():
+    """Specific health check endpoint for Digital Ocean."""
+    return jsonify({
+        "status": "healthy",
+        "mode": "fallback"
+    })
 
 @app.route('/health')
 def health():

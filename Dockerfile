@@ -61,6 +61,7 @@ COPY --from=frontend-build /app/frontend/build ./frontend/build
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 ENV FLASK_ENV=production
 ENV FLASK_APP=do_app.py
 
