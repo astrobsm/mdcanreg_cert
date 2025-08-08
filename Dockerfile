@@ -18,16 +18,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wkhtmltopdf \
     libpq-dev \
     gcc \
+    g++ \
+    python3-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy backend requirements and install dependencies
 COPY backend/requirements.txt .
 
-# Install numpy and pandas first to ensure compatibility
-RUN pip install --no-cache-dir numpy==1.24.3
-RUN pip install --no-cache-dir pandas==1.5.3
-RUN pip install --no-cache-dir -r requirements.txt
+# Completely reinstall numpy and pandas with compatible versions
+# First uninstall any existing versions
+RUN pip uninstall -y numpy pandas
+# Install specific versions with binary compatibility
+RUN pip install --no-cache-dir numpy==1.21.6
+RUN pip install --no-cache-dir pandas==1.3.5
+# Install other requirements but skip numpy and pandas
+RUN grep -v "numpy\|pandas" requirements.txt > filtered_requirements.txt
+RUN pip install --no-cache-dir -r filtered_requirements.txt
 
 # Copy backend code - ensure it goes into a proper backend directory
 COPY backend/ ./backend/
@@ -38,6 +45,9 @@ RUN touch backend/__init__.py
 # Copy the entry point and fallback app
 COPY app.py .
 COPY fallback_app.py .
+
+# Make sure minimal_app.py exists in backend directory
+RUN test -f backend/minimal_app.py || echo "Minimal app not found in backend directory"
 
 # Copy built frontend from previous stage
 COPY --from=frontend-build /app/frontend/build ./frontend/build
@@ -52,4 +62,4 @@ ENV FLASK_APP=app.py
 EXPOSE 8080
 
 # Run gunicorn with optimized settings and detailed error logging
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120", "--log-level", "debug", "--capture-output", "--enable-stdio-inheritance", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "debug", "--capture-output", "--enable-stdio-inheritance", "--preload", "app:app"]

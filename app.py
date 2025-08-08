@@ -27,6 +27,26 @@ else:
 # Try to import the main app, but fall back to a minimal app if there are issues
 try:
     logger.info("Attempting to import main application...")
+    
+    # First try to import pandas and numpy to catch any compatibility issues early
+    try:
+        logger.info("Checking numpy and pandas compatibility...")
+        import numpy
+        logger.info(f"Numpy version: {numpy.__version__}")
+        import pandas
+        logger.info(f"Pandas version: {pandas.__version__}")
+    except ValueError as ve:
+        if "numpy.dtype size changed" in str(ve):
+            logger.error("Binary incompatibility between numpy and pandas detected")
+            logger.error(f"Error: {str(ve)}")
+            raise ImportError(f"Binary incompatibility between numpy and pandas: {str(ve)}")
+        else:
+            logger.error(f"ValueError in numpy/pandas import: {str(ve)}")
+            raise
+    except Exception as e:
+        logger.error(f"Error importing numpy or pandas: {str(e)}")
+        raise
+        
     # Try multiple import paths to be more robust
     try:
         # Import Flask app from the backend/app.py file (standard path)
@@ -46,6 +66,16 @@ except Exception as e:
     logger.error(f"Error importing main application: {str(e)}")
     logger.error(f"Exception type: {type(e).__name__}")
     logger.error(f"Exception traceback: {sys.exc_info()}")
+    
+    # Try the minimal backend app first
+    try:
+        logger.info("Trying minimal backend app...")
+        from backend.minimal_app import app
+        logger.info("Minimal backend app loaded successfully.")
+        return
+    except Exception as minimal_error:
+        logger.error(f"Error loading minimal backend app: {str(minimal_error)}")
+    
     logger.info("Falling back to minimal application...")
     
     # Import the fallback minimal app
