@@ -419,6 +419,37 @@ def status():
             "static_folder": static_folder
         }
     })
+
+@app.route('/api/init-database', methods=['POST'])
+def init_database():
+    """Initialize database tables"""
+    try:
+        # Check if database connection works
+        db.engine.execute('SELECT 1')
+        
+        # Create all tables
+        db.create_all()
+        
+        # Verify tables were created
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Database tables created successfully",
+            "tables_created": tables,
+            "database_url": bool(os.environ.get('DATABASE_URL'))
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to initialize database: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "database_url": bool(os.environ.get('DATABASE_URL'))
+        }), 500
 @app.route('/api/participants/<int:id>', methods=['PUT'])
 def update_participant(id):
     try:
