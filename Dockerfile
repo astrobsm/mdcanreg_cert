@@ -68,6 +68,5 @@ ENV FLASK_APP=digital_ocean_app.py
 # Expose port 8080 - Digital Ocean App Platform requires this port
 EXPOSE 8080
 
-# IMPORTANT: Use the simplest possible command for Digital Ocean
-# This bypasses any issues with shell variable expansion
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-", "digital_ocean_app:app"]
+# Use shell form to properly handle PORT environment variable with fallback
+CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 120 --log-level debug --access-logfile - --error-logfile - digital_ocean_app:app
