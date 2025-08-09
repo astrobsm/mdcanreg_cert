@@ -39,7 +39,7 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       
       <div className="conference-details-preview">
         <div className="event-name-preview">
-          MDCAN 14th Biennial Delegates' Meeting and SCIENTIFIC Conference
+          MDCAN BDM 14th – 2025
         </div>
         
         <div className="certificate-text">
@@ -111,7 +111,7 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       
       <div className="conference-details-preview">
         <div className="event-name-preview">
-          MDCAN 14th Biennial Delegates' Meeting and SCIENTIFIC Conference
+          MDCAN BDM 14th – 2025
         </div>
         
         <div className="certificate-text">
@@ -123,20 +123,20 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
         <div className="signature">
           <div className="signature-line"></div>
           <div className="signature-name-preview">
-            Prof. Appolos Ndukuba
+            Prof. Aminu Mohammed
           </div>
           <div className="signature-title-preview">
-            LOC Chairman
+            MDCAN President
           </div>
         </div>
         
         <div className="signature">
           <div className="signature-line"></div>
           <div className="signature-name-preview">
-            Dr. Augustine Duru
+            Prof. Appolos Ndukuba
           </div>
           <div className="signature-title-preview">
-            LOC Secretary<br/>MDCAN Sec. Gen.
+            LOC Chairman
           </div>
         </div>
       </div>
