@@ -38,6 +38,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({});
   const [userType, setUserType] = useState('participant'); // participant, admin
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState('');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -235,9 +238,39 @@ function App() {
   };
 
   const switchToAdmin = () => {
-    setUserType('admin');
+    if (isAdminAuthenticated) {
+      setUserType('admin');
+      setCurrentUser(null);
+      setActiveTab('admin-dashboard');
+    } else {
+      setShowAdminLogin(true);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    if (adminPassword === 'redvelvet') {
+      setIsAdminAuthenticated(true);
+      setUserType('admin');
+      setCurrentUser(null);
+      setActiveTab('admin-dashboard');
+      setShowAdminLogin(false);
+      setAdminPassword('');
+      setMessage('Admin authentication successful!');
+      setTimeout(() => setMessage(''), 3000);
+    } else {
+      setMessage('Invalid admin password. Please try again.');
+      setTimeout(() => setMessage(''), 3000);
+      setAdminPassword('');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    setUserType('participant');
     setCurrentUser(null);
-    setActiveTab('admin-dashboard');
+    setActiveTab('registration');
+    setMessage('Admin logged out successfully.');
+    setTimeout(() => setMessage(''), 3000);
   };
 
   const switchToParticipant = () => {
@@ -328,8 +361,17 @@ function App() {
                 className={userType === 'admin' ? 'active' : ''}
                 onClick={switchToAdmin}
               >
-                🛠️ Admin Portal
+                🛠️ Admin Portal {isAdminAuthenticated ? '(Authenticated)' : '(Login Required)'}
               </button>
+              {userType === 'admin' && isAdminAuthenticated && (
+                <button 
+                  onClick={handleAdminLogout}
+                  className="logout-btn"
+                  style={{marginLeft: '10px', backgroundColor: '#dc3545', color: 'white'}}
+                >
+                  🚪 Logout
+                </button>
+              )}
             </div>
             
             {userType === 'participant' && !currentUser && (
@@ -429,8 +471,8 @@ function App() {
               🏆 Certificate Preview
             </button>
           </div>
-        ) : (
-          // Admin Navigation
+        ) : userType === 'admin' && isAdminAuthenticated ? (
+          // Admin Navigation (Authenticated)
           <div className="nav-tabs">
             <button 
               className={activeTab === 'admin-dashboard' ? 'active' : ''}
@@ -499,6 +541,13 @@ function App() {
               🏆 Certificate Preview
             </button>
           </div>
+        ) : (
+          // Admin not authenticated - show message
+          <div className="nav-tabs">
+            <div className="admin-auth-message">
+              <p>🔐 Please authenticate to access admin features</p>
+            </div>
+          </div>
         )}
       </nav>
 
@@ -510,7 +559,7 @@ function App() {
       )}
 
       {/* Statistics Bar (Admin only) */}
-      {userType === 'admin' && stats.participants && (
+      {userType === 'admin' && isAdminAuthenticated && stats.participants && (
         <div className="stats-bar">
           <div className="stat-item">
             <span className="stat-number">{stats.participants.total}</span>
@@ -571,7 +620,7 @@ function App() {
         )}
 
         {/* Admin Portal */}
-        {userType === 'admin' && (
+        {userType === 'admin' && isAdminAuthenticated && (
           <>
             {activeTab === 'admin-dashboard' && (
               <AdminDashboard 
@@ -683,6 +732,52 @@ function App() {
           <p>&copy; 2025 MDCAN BDM. All rights reserved. | Certificate Generation Platform v2.0</p>
         </div>
       </footer>
+
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="modal-overlay" onClick={() => setShowAdminLogin(false)}>
+          <div className="modal-content admin-login-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🔐 Admin Authentication Required</h3>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowAdminLogin(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Please enter the admin password to access the admin portal:</p>
+              <div className="form-group">
+                <label>Admin Password:</label>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+                  placeholder="Enter admin password"
+                  autoFocus
+                />
+              </div>
+              <div className="modal-actions">
+                <button 
+                  onClick={handleAdminLogin}
+                  className="btn-primary"
+                  disabled={!adminPassword.trim()}
+                >
+                  🔓 Login
+                </button>
+                <button 
+                  onClick={() => setShowAdminLogin(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
