@@ -449,12 +449,36 @@ def db_test():
 def setup_database():
     """Set up database tables manually"""
     try:
-        # Try to create tables
-        db.create_all()
+        # Create the participant table using raw SQL
+        create_sql = """
+        CREATE TABLE IF NOT EXISTS participant (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            role VARCHAR(50) DEFAULT 'Attendee',
+            cert_type VARCHAR(50) DEFAULT 'participation',
+            registration_number VARCHAR(50),
+            phone VARCHAR(20),
+            gender VARCHAR(10),
+            specialty VARCHAR(100),
+            state VARCHAR(50),
+            hospital VARCHAR(100),
+            cert_sent BOOLEAN DEFAULT FALSE,
+            cert_sent_date TIMESTAMP,
+            certificate_id VARCHAR(50),
+            date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            registration_status VARCHAR(20) DEFAULT 'Pending',
+            registration_fee_paid BOOLEAN DEFAULT FALSE
+        );
+        """
+        
+        with db.engine.connect() as connection:
+            connection.execute(sa.text(create_sql))
+            connection.commit()
         
         return jsonify({
             "status": "success",
-            "message": "Database setup completed - tables created",
+            "message": "Participant table created using raw SQL",
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         })
         
