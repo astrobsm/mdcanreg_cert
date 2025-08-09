@@ -57,10 +57,11 @@ static_folder = None
 FRONTEND_BUILD_FOLDER = None
 
 for path in possible_frontend_paths:
+    abs_path = os.path.abspath(path)
     if os.path.exists(path) and os.path.exists(os.path.join(path, 'index.html')):
-        static_folder = path
-        FRONTEND_BUILD_FOLDER = path
-        print(f"Found frontend build at: {path}")
+        static_folder = abs_path  # Use absolute path instead of relative
+        FRONTEND_BUILD_FOLDER = abs_path  # Use absolute path instead of relative
+        print(f"Found frontend build at: {path} (absolute: {abs_path})")
         break
 
 if not static_folder:
