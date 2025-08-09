@@ -56,5 +56,5 @@ services:
   instance_count: 1
   instance_size_slug: apps-s-1vcpu-0.5gb
   name: mdcanreg-cert
-  run_command: gunicorn --bind 0.0.0.0:${PORT:-8080} digital_ocean_app:app
+  run_command: gunicorn --bind 0.0.0.0:${PORT:-8080} main:app
   source_dir: /
