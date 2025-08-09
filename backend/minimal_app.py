@@ -420,6 +420,15 @@ def status():
         }
     })
 
+@app.route('/api/db-test')
+def db_test():
+    """Simple database test endpoint"""
+    return jsonify({
+        "status": "ok",
+        "message": "Database test endpoint reached",
+        "database_url_configured": bool(os.environ.get('DATABASE_URL'))
+    })
+
 @app.route('/api/setup-db')
 def setup_database():
     """Set up database tables manually"""
