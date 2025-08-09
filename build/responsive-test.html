@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>MDCAN BDM 2025 - Responsive Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 100%;
+            padding: 20px;
+        }
+        .test-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .device-display {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .device-info {
+            margin-bottom: 10px;
+        }
+        .viewport-size {
+            font-weight: bold;
+            color: #008000;
+        }
+        /* Responsive breakpoints */
+        @media (min-width: 992px) {
+            .device-class::after {
+                content: "Desktop";
+                color: #0066cc;
+            }
+        }
+        @media (min-width: 768px) and (max-width: 991px) {
+            .device-class::after {
+                content: "Tablet";
+                color: #9900cc;
+            }
+        }
+        @media (max-width: 767px) {
+            .device-class::after {
+                content: "Mobile";
+                color: #cc3300;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-box">
+            <h1>MDCAN BDM 2025</h1>
+            <h2>Responsive Design Test</h2>
+            
+            <div class="device-display">
+                Your device appears to be: <span class="device-class"></span>
+            </div>
+            
+            <div class="device-info">
+                <div class="viewport-size">
+                    Viewport size: <span id="width">-</span> x <span id="height">-</span>
+                </div>
+            </div>
+            
+            <p>Resize your browser window or rotate your device to see the responsive design in action.</p>
+            
+            <div class="buttons">
+                <a href="/" style="display: inline-block; padding: 10px 20px; background-color: #008000; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+                    Go to Main Application
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update viewport size
+        function updateViewportSize() {
+            document.getElementById('width').textContent = window.innerWidth;
+            document.getElementById('height').textContent = window.innerHeight;
+        }
+        
+        // Initial update
+        updateViewportSize();
+        
+        // Update on resize
+        window.addEventListener('resize', updateViewportSize);
+    </script>
+</body>
+</html>
