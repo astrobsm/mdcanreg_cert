@@ -422,10 +422,11 @@ def status():
 
 @app.route('/api/db-test')
 def db_test():
-    """Simple database test endpoint"""
+    """Simple database test endpoint - v2"""
     return jsonify({
         "status": "ok",
-        "message": "Database test endpoint reached",
+        "message": "Database test endpoint reached - version 2",
+        "timestamp": datetime.utcnow().isoformat(),
         "database_url_configured": bool(os.environ.get('DATABASE_URL'))
     })
 
