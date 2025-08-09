@@ -464,6 +464,61 @@ def create_all_tables():
             "timestamp": datetime.utcnow().isoformat()
         }), 500
 
+@app.route('/api/check-permissions')
+def check_permissions():
+    """Check database permissions and schemas"""
+    try:
+        with db.engine.connect() as connection:
+            # Check current user
+            user_result = connection.execute(sa.text("SELECT current_user, current_database()"))
+            user_info = user_result.fetchone()
+            
+            # Check available schemas
+            schema_result = connection.execute(sa.text("""
+                SELECT schema_name 
+                FROM information_schema.schemata 
+                WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+            """))
+            schemas = [row[0] for row in schema_result.fetchall()]
+            
+            # Check permissions on public schema
+            perms_result = connection.execute(sa.text("""
+                SELECT 
+                    has_schema_privilege(current_user, 'public', 'CREATE') as can_create,
+                    has_schema_privilege(current_user, 'public', 'USAGE') as can_use
+            """))
+            permissions = perms_result.fetchone()
+            
+            # Check if we own any schemas
+            owned_result = connection.execute(sa.text("""
+                SELECT schema_name 
+                FROM information_schema.schemata 
+                WHERE schema_owner = current_user
+            """))
+            owned_schemas = [row[0] for row in owned_result.fetchall()]
+        
+        return jsonify({
+            "status": "success",
+            "current_user": user_info[0] if user_info else None,
+            "current_database": user_info[1] if user_info else None,
+            "available_schemas": schemas,
+            "public_schema_permissions": {
+                "can_create": permissions[0] if permissions else False,
+                "can_use": permissions[1] if permissions else False
+            },
+            "owned_schemas": owned_schemas,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"Permission check failed: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
+
 @app.route('/api/create-table-now')
 def create_table_now():
     """Create participant table immediately"""
