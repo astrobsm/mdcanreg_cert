@@ -464,6 +464,61 @@ def create_all_tables():
             "timestamp": datetime.utcnow().isoformat()
         }), 500
 
+@app.route('/api/create-table-now')
+def create_table_now():
+    """Create participant table immediately"""
+    try:
+        # Simple CREATE TABLE statement
+        sql = """
+        CREATE TABLE IF NOT EXISTS participant (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            role VARCHAR(50) DEFAULT 'Attendee',
+            cert_type VARCHAR(50) DEFAULT 'participation',
+            registration_number VARCHAR(50),
+            phone VARCHAR(20),
+            gender VARCHAR(10),
+            specialty VARCHAR(100),
+            state VARCHAR(50),
+            hospital VARCHAR(100),
+            cert_sent BOOLEAN DEFAULT FALSE,
+            cert_sent_date TIMESTAMP,
+            certificate_id VARCHAR(50),
+            date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            registration_status VARCHAR(20) DEFAULT 'Pending',
+            registration_fee_paid BOOLEAN DEFAULT FALSE
+        )
+        """
+        
+        # Execute with autocommit
+        connection = db.engine.connect()
+        trans = connection.begin()
+        try:
+            connection.execute(sa.text(sql))
+            trans.commit()
+            success = True
+            message = "Table created successfully"
+        except Exception as e:
+            trans.rollback()
+            success = False
+            message = f"Failed to create table: {str(e)}"
+        finally:
+            connection.close()
+        
+        return jsonify({
+            "status": "success" if success else "error",
+            "message": message,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Endpoint error: {str(e)}",
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
+
 @app.route('/api/force-create')
 def force_create_tables():
     """Force create tables using SQLAlchemy"""
