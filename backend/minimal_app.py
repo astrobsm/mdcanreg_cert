@@ -539,45 +539,7 @@ def generate_certificate(participant_id):
             "message": str(e)
         }), 500
 
-# Serve the React frontend
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react(path):
-    """Serve the React frontend"""
-    print(f"Route requested: '{path}', static_folder: {static_folder}")
-    
-    # Handle specific frontend files
-    if path and '.' in path:
-        if static_folder and os.path.exists(os.path.join(static_folder, path)):
-            print(f"Serving file: {path}")
-            return send_from_directory(static_folder, path)
-    
-    # Handle API routes - should not reach here due to other route handlers
-    if path and path.startswith('api/'):
-        print(f"API route requested: {path} - letting it fall through")
-        return None
-    
-    # For root path or any non-API path, serve index.html
-    if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
-        print(f"Serving index.html from: {static_folder}")
-        return send_from_directory(static_folder, 'index.html')
-    
-    print(f"Frontend not available - static_folder: {static_folder}")
-    
-    # Debugging information when frontend is not available
-    debug_info = {
-        "status": "ok",
-        "message": "MDCAN BDM 2025 Certificate Platform",
-        "frontend_status": "Frontend build not found",
-        "static_folder": static_folder,
-        "requested_path": path,
-        "environment": {
-            "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
-            "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
-        }
-    }
-    
-    return jsonify(debug_info)
+# Route definitions for specific API endpoints first, then catch-all route at the end
 
 # API routes for participant management
 @app.route('/api/participants', methods=['GET'])
@@ -943,6 +905,49 @@ def get_statistics():
             "status": "error",
             "message": str(e)
         }), 500
+
+# Serve the React frontend - MUST be at the end to avoid route conflicts
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react(path):
+    """Serve the React frontend"""
+    print(f"Route requested: '{path}', static_folder: {static_folder}")
+    
+    # Handle API routes - return 404 if specific route not found
+    if path and path.startswith('api/'):
+        print(f"API route requested: {path} - route not found")
+        return jsonify({"error": "API endpoint not found", "path": path}), 404
+    
+    # Handle specific frontend files
+    if path and '.' in path:
+        if static_folder and os.path.exists(os.path.join(static_folder, path)):
+            print(f"Serving file: {path}")
+            return send_from_directory(static_folder, path)
+        else:
+            print(f"File not found: {path}")
+            return jsonify({"error": "File not found", "path": path}), 404
+    
+    # For root path or any non-API path, serve index.html
+    if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
+        print(f"Serving index.html from: {static_folder}")
+        return send_from_directory(static_folder, 'index.html')
+    
+    print(f"Frontend not available - static_folder: {static_folder}")
+    
+    # Debugging information when frontend is not available
+    debug_info = {
+        "status": "ok",
+        "message": "MDCAN BDM 2025 Certificate Platform",
+        "frontend_status": "Frontend build not found",
+        "static_folder": static_folder,
+        "requested_path": path,
+        "environment": {
+            "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
+            "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
+        }
+    }
+    
+    return jsonify(debug_info)
 
 # Initialize the application
 if __name__ == "__main__":
