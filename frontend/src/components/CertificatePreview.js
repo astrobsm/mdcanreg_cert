@@ -44,7 +44,11 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       
       <div className="signatures">
         <div className="signature">
-          <div className="signature-line"></div>
+          <img 
+            src="/president-signature.jpg" 
+            alt="President Signature" 
+            style={{ height: '60px', marginBottom: '5px' }}
+          />
           <div className="signature-name-preview">
             Prof. Aminu Mohammed
           </div>
@@ -54,7 +58,11 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
         </div>
         
         <div className="signature">
-          <div className="signature-line"></div>
+          <img 
+            src="/chairman-signature.png" 
+            alt="Chairman Signature" 
+            style={{ height: '60px', marginBottom: '5px' }}
+          />
           <div className="signature-name-preview">
             Prof. Appolos Ndukuba
           </div>
@@ -111,7 +119,11 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       
       <div className="signatures">
         <div className="signature">
-          <div className="signature-line"></div>
+          <img 
+            src="/chairman-signature.png" 
+            alt="Chairman Signature" 
+            style={{ height: '60px', marginBottom: '5px' }}
+          />
           <div className="signature-name-preview">
             Prof. Appolos Ndukuba
           </div>
@@ -121,7 +133,11 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
         </div>
         
         <div className="signature">
-          <div className="signature-line"></div>
+          <img 
+            src="/Dr_Augustine_Duru_signature.jpg" 
+            alt="Secretary Signature" 
+            style={{ height: '60px', marginBottom: '5px' }}
+          />
           <div className="signature-name-preview">
             Dr. Augustine Duru
           </div>
