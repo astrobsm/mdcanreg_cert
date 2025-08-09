@@ -445,11 +445,51 @@ def db_test():
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         }), 500
 
+@app.route('/api/table-test')
+def test_table_exists():
+    """Test if participant table exists"""
+    try:
+        # Try a simple query to see if table exists
+        with db.engine.connect() as connection:
+            result = connection.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participant')"))
+            table_exists = result.fetchone()[0]
+            
+            # If table doesn't exist, try to create it using SQLAlchemy
+            if not table_exists:
+                # Force creation in the database context
+                with app.app_context():
+                    db.create_all()
+                
+                # Check again
+                result = connection.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participant')"))
+                table_exists_after = result.fetchone()[0]
+                
+                return jsonify({
+                    "status": "attempted_creation",
+                    "table_existed_before": table_exists,
+                    "table_exists_after": table_exists_after,
+                    "message": "Attempted to create tables"
+                })
+            else:
+                return jsonify({
+                    "status": "exists",
+                    "table_exists": table_exists,
+                    "message": "Participant table already exists"
+                })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"Table test failed: {str(e)}",
+            "traceback": traceback.format_exc()
+        }), 500
+
 @app.route('/api/setup-db')
 def setup_database():
     """Set up database tables manually"""
     try:
-        # Create the participant table using raw SQL
+        # Create the participant table using raw SQL with autocommit
         create_sql = """
         CREATE TABLE IF NOT EXISTS participant (
             id SERIAL PRIMARY KEY,
@@ -472,13 +512,15 @@ def setup_database():
         );
         """
         
-        with db.engine.connect() as connection:
-            connection.execute(sa.text(create_sql))
-            connection.commit()
+        # Try with autocommit connection
+        connection = db.engine.connect()
+        connection.execute(sa.text("SET autocommit = true"))
+        connection.execute(sa.text(create_sql))
+        connection.close()
         
         return jsonify({
-            "status": "success",
-            "message": "Participant table created using raw SQL",
+            "status": "success", 
+            "message": "Participant table created using raw SQL with autocommit",
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         })
         
