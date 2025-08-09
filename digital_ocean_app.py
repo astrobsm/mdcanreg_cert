@@ -1,11 +1,11 @@
 """
 Digital Ocean App Platform Entry Point
-A simplified script designed specifically for Digital Ocean App Platform deployment
+Clean, optimized entry point for MDCAN BDM 2025 Certificate Platform
 """
 import os
 import sys
 import logging
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 
 # Configure logging
 logging.basicConfig(
@@ -14,13 +14,15 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-# Create a simple Flask app that will work on Digital Ocean
-app = Flask(__name__, static_folder='./frontend/build/static', static_url_path='/static')
+# Create the primary Flask app
+app = Flask(__name__, 
+            static_folder='./frontend/build/static',
+            static_url_path='/static')
 
-# Health check endpoint - critical for Digital Ocean health checks
+# Health check endpoint - CRITICAL for Digital Ocean health checks
 @app.route('/health')
 def health():
-    return jsonify({"status": "healthy"})
+    return jsonify({"status": "healthy", "service": "MDCAN BDM 2025"})
 
 # Root endpoint
 @app.route('/')
@@ -28,29 +30,51 @@ def root():
     return jsonify({
         "status": "ok", 
         "message": "MDCAN BDM 2025 Certificate Platform", 
-        "info": "Digital Ocean simplified deployment"
+        "version": "1.0.0",
+        "deployment": "Digital Ocean App Platform"
     })
 
-# Log environment variables for debugging
-logging.info("=== Environment Variables (excluding sensitive data) ===")
+# Log environment info (excluding sensitive data)
+logging.info("=== MDCAN BDM 2025 Application Starting ===")
 for key, value in os.environ.items():
     if not any(x in key.lower() for x in ['password', 'token', 'key', 'secret']):
-        logging.info(f"{key}: {value}")
+        logging.info(f"ENV: {key}={value}")
 
-# Import the actual application only after setting up the basic endpoints
+# Import and integrate the full application
 try:
-    logging.info("Attempting to import the full application...")
+    logging.info("Loading full application features...")
     from backend.minimal_app import app as full_app
     
-    # Replace our simple app with the full application
-    app = full_app
-    logging.info("Successfully imported full application")
+    # Copy all routes from the full app to our main app
+    for rule in full_app.url_map.iter_rules():
+        endpoint = full_app.view_functions[rule.endpoint]
+        app.add_url_rule(rule.rule, rule.endpoint, endpoint, methods=rule.methods)
+    
+    # Copy configuration
+    app.config.update(full_app.config)
+    
+    logging.info("✅ Full application features loaded successfully")
+    
 except Exception as e:
-    logging.error(f"Error importing full application: {e}")
-    logging.info("Continuing with simplified app for health checks")
+    logging.warning(f"⚠️  Could not load full application: {e}")
+    logging.info("🔄 Running in basic mode with health checks only")
+
+# Serve React frontend
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    """Serve React frontend files"""
+    try:
+        if path and not path.startswith('api'):
+            frontend_path = os.path.join('./frontend/build', path)
+            if os.path.exists(frontend_path):
+                return send_from_directory('./frontend/build', path)
+        return send_from_directory('./frontend/build', 'index.html')
+    except Exception as e:
+        logging.error(f"Frontend serving error: {e}")
+        return jsonify({"error": "Frontend not available"}), 404
 
 if __name__ == "__main__":
-    # Get port - hardcoded to 8080 for Digital Ocean
-    port = 8080
-    logging.info(f"Starting server on port {port}")
-    app.run(host='0.0.0.0', port=port)
+    port = 8080  # Fixed port for Digital Ocean
+    logging.info(f"🚀 Starting MDCAN BDM 2025 server on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)

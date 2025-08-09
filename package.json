@@ -17,14 +17,9 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
-    "build:dev": "GENERATE_SOURCEMAP=true react-scripts build",
-    "build:safe": "INLINE_RUNTIME_CHUNK=false GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "start-development.bat",
-    "quick": "start-quick.bat",
-    "dev-mode": "start-dev-mode.bat",
-    "reset": "reset-environment.bat"
+    "dev": "start-dev.bat"
   },
   "eslintConfig": {
     "extends": [
