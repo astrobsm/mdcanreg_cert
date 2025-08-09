@@ -69,4 +69,5 @@ ENV FLASK_APP=digital_ocean_app.py
 EXPOSE 8080
 
 # Use shell form to properly handle PORT environment variable with fallback
+# Entry point: digital_ocean_app:app (confirmed by entry point detection)
 CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 120 --log-level debug --access-logfile - --error-logfile - digital_ocean_app:app
