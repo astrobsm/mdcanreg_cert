@@ -539,40 +539,40 @@ def generate_certificate(participant_id):
 @app.route('/<path:path>')
 def serve_react(path):
     """Serve the React frontend"""
-    if not path or path == '/':
-        if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
-            print(f"Serving index.html from: {static_folder}")
-            return send_from_directory(static_folder, 'index.html')
-        
-        # Debugging information when frontend is not available
-        debug_info = {
-            "status": "ok",
-            "message": "MDCAN BDM 2025 Certificate Platform",
-            "frontend_status": "Frontend build not found",
-            "static_folder": static_folder,
-            "environment": {
-                "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
-                "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
-            },
-            "available_files": []
+    print(f"Route requested: '{path}', static_folder: {static_folder}")
+    
+    # Handle specific frontend files
+    if path and '.' in path:
+        if static_folder and os.path.exists(os.path.join(static_folder, path)):
+            print(f"Serving file: {path}")
+            return send_from_directory(static_folder, path)
+    
+    # Handle API routes - should not reach here due to other route handlers
+    if path and path.startswith('api/'):
+        print(f"API route requested: {path} - letting it fall through")
+        return None
+    
+    # For root path or any non-API path, serve index.html
+    if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
+        print(f"Serving index.html from: {static_folder}")
+        return send_from_directory(static_folder, 'index.html')
+    
+    print(f"Frontend not available - static_folder: {static_folder}")
+    
+    # Debugging information when frontend is not available
+    debug_info = {
+        "status": "ok",
+        "message": "MDCAN BDM 2025 Certificate Platform",
+        "frontend_status": "Frontend build not found",
+        "static_folder": static_folder,
+        "requested_path": path,
+        "environment": {
+            "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
+            "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
         }
-        
-        # List available files for debugging
-        try:
-            for root, dirs, files in os.walk('.'):
-                if len(debug_info["available_files"]) < 20:  # Limit output
-                    for file in files[:5]:  # Show first 5 files per directory
-                        debug_info["available_files"].append(f"{root}/{file}")
-        except:
-            pass
-            
-        return jsonify(debug_info)
+    }
     
-    if static_folder and os.path.exists(os.path.join(static_folder, path)):
-        return send_from_directory(static_folder, path)
-    
-    # For API routes, let them fall through to other handlers
-    if path.startswith('api/'):
+    return jsonify(debug_info)
         return None
     
     # For React router routes, return index.html
