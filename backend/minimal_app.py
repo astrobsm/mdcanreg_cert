@@ -154,6 +154,45 @@ EMAIL_FROM = os.environ.get('EMAIL_FROM', 'MDCAN BDM 2025 <noreply@mdcan.org>')
 CERT_EVENT_TEXT = "MDCAN BDM 14th – 2025 held in Enugu on 1st – 6th September, 2025"
 CERT_SERVICE_TEXT = "the successful hosting of the MDCAN BDM 14th – 2025 on 1st – 6th September 2025"
 
+# Helper function to load and encode signature files
+def load_signature_file(filename):
+    """Load signature file and return base64 encoded string"""
+    try:
+        # Try multiple possible paths for the signature files
+        possible_paths = [
+            f'frontend/public/{filename}',
+            f'../frontend/public/{filename}',
+            f'./frontend/public/{filename}',
+            f'/app/frontend/public/{filename}',
+            f'public/{filename}',
+            filename
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                with open(path, 'rb') as f:
+                    image_data = f.read()
+                    encoded = base64.b64encode(image_data).decode('utf-8')
+                    print(f"Loaded signature file: {path}")
+                    return encoded
+        
+        print(f"Warning: Signature file {filename} not found in any of the expected paths")
+        return ""
+    except Exception as e:
+        print(f"Error loading signature file {filename}: {e}")
+        return ""
+
+# Load signature files at startup
+PRESIDENT_SIGNATURE = load_signature_file('president-signature.jpg')
+CHAIRMAN_SIGNATURE = load_signature_file('chairman-signature.png') 
+SECRETARY_SIGNATURE = load_signature_file('Dr_Augustine_Duru_signature.jpg')
+
+# Load logo file
+MDCAN_LOGO = load_signature_file('logo-mdcan.jpeg')
+
+print(f"Signatures loaded - President: {'✓' if PRESIDENT_SIGNATURE else '✗'}, Chairman: {'✓' if CHAIRMAN_SIGNATURE else '✗'}, Secretary: {'✓' if SECRETARY_SIGNATURE else '✗'}")
+print(f"Logo loaded: {'✓' if MDCAN_LOGO else '✗'}")
+
 # Certificate templates
 PARTICIPATION_CERTIFICATE_TEMPLATE = """
 <!DOCTYPE html>
@@ -870,8 +909,8 @@ def generate_certificate(participant_id):
                 name=participant.name,
                 service_text=CERT_SERVICE_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature="", # Base64 encoded signature would go here
-                chairman_signature="", # Base64 encoded signature would go here
+                president_signature=PRESIDENT_SIGNATURE_BASE64,
+                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
                 logo="" # Base64 encoded logo would go here
             )
         else:
@@ -881,8 +920,8 @@ def generate_certificate(participant_id):
                 name=participant.name,
                 event_text=CERT_EVENT_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature="", # Base64 encoded signature would go here
-                chairman_signature="", # Base64 encoded signature would go here
+                president_signature=PRESIDENT_SIGNATURE_BASE64,
+                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
                 logo="" # Base64 encoded logo would go here
             )
             
@@ -1021,8 +1060,8 @@ def send_certificate(participant_id):
                 name=participant.name,
                 service_text=CERT_SERVICE_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature="", # Base64 encoded signature would go here
-                chairman_signature="", # Base64 encoded signature would go here
+                president_signature=PRESIDENT_SIGNATURE_BASE64,
+                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
                 logo="" # Base64 encoded logo would go here
             )
         else:
@@ -1032,8 +1071,8 @@ def send_certificate(participant_id):
                 name=participant.name,
                 event_text=CERT_EVENT_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature="", # Base64 encoded signature would go here
-                chairman_signature="", # Base64 encoded signature would go here
+                president_signature=PRESIDENT_SIGNATURE_BASE64,
+                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
                 logo="" # Base64 encoded logo would go here
             )
         
