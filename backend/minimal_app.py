@@ -376,6 +376,11 @@ SERVICE_CERTIFICATE_TEMPLATE = """
 </html>
 """
 
+@app.route('/test-simple')
+def test_simple():
+    """Simple test route to verify routing is working"""
+    return "MDCAN BDM 2025 - Route Test Working!"
+
 @app.route('/api/health')
 def health():
     """Health check endpoint"""
