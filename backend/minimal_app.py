@@ -44,16 +44,35 @@ def add_security_headers(response):
     return response
 
 # Configure static folder for frontend files
-if os.path.exists('frontend/build'):
-    FRONTEND_BUILD_FOLDER = 'frontend/build'
-    static_folder = 'frontend/build'
-elif os.path.exists('../frontend/build'):
-    FRONTEND_BUILD_FOLDER = '../frontend/build'
-    static_folder = '../frontend/build'
-else:
-    # Fallback to backend/static if frontend build doesn't exist
-    FRONTEND_BUILD_FOLDER = 'static' if os.path.exists('static') else None
+# Try multiple possible paths for the frontend build
+possible_frontend_paths = [
+    'frontend/build',           # From root directory
+    '../frontend/build',        # From backend directory  
+    './frontend/build',         # Current directory variant
+    '/app/frontend/build',      # Docker absolute path
+    'build',                    # Direct build folder
+]
+
+static_folder = None
+FRONTEND_BUILD_FOLDER = None
+
+for path in possible_frontend_paths:
+    if os.path.exists(path) and os.path.exists(os.path.join(path, 'index.html')):
+        static_folder = path
+        FRONTEND_BUILD_FOLDER = path
+        print(f"Found frontend build at: {path}")
+        break
+
+if not static_folder:
+    print("Warning: Frontend build not found. Available files:")
+    for root, dirs, files in os.walk('.'):
+        if 'index.html' in files:
+            print(f"  Found index.html in: {root}")
+        if 'build' in dirs:
+            print(f"  Found build directory in: {root}")
+    # Fallback to static if frontend build doesn't exist
     static_folder = 'static' if os.path.exists('static') else None
+    FRONTEND_BUILD_FOLDER = static_folder
 
 # Configure database connection
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///mdcan_certificates.db')
@@ -522,16 +541,32 @@ def serve_react(path):
     """Serve the React frontend"""
     if not path or path == '/':
         if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
+            print(f"Serving index.html from: {static_folder}")
             return send_from_directory(static_folder, 'index.html')
-        return jsonify({
+        
+        # Debugging information when frontend is not available
+        debug_info = {
             "status": "ok",
-            "message": "MDCAN BDM 2025 Certificate Platform - Minimal Backend",
-            "frontend": "Not available in minimal mode",
+            "message": "MDCAN BDM 2025 Certificate Platform",
+            "frontend_status": "Frontend build not found",
+            "static_folder": static_folder,
             "environment": {
                 "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
                 "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
-            }
-        })
+            },
+            "available_files": []
+        }
+        
+        # List available files for debugging
+        try:
+            for root, dirs, files in os.walk('.'):
+                if len(debug_info["available_files"]) < 20:  # Limit output
+                    for file in files[:5]:  # Show first 5 files per directory
+                        debug_info["available_files"].append(f"{root}/{file}")
+        except:
+            pass
+            
+        return jsonify(debug_info)
     
     if static_folder and os.path.exists(os.path.join(static_folder, path)):
         return send_from_directory(static_folder, path)
