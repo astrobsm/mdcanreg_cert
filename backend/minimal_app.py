@@ -420,12 +420,13 @@ def status():
         }
     })
 
-@app.route('/api/init-database', methods=['POST'])
+@app.route('/api/init-database', methods=['GET', 'POST'])
 def init_database():
     """Initialize database tables"""
     try:
         # Check if database connection works
-        db.engine.execute('SELECT 1')
+        with db.engine.connect() as connection:
+            connection.execute(sa.text('SELECT 1'))
         
         # Create all tables
         db.create_all()
