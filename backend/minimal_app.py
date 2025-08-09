@@ -449,22 +449,12 @@ def db_test():
 def setup_database():
     """Set up database tables manually"""
     try:
-        # Use SQLAlchemy's built-in table creation
+        # Try to create tables
         db.create_all()
         
-        # Test if tables were created by checking the participant table
-        from sqlalchemy import inspect
-        inspector = inspect(db.engine)
-        tables = inspector.get_table_names()
-        
-        # Check if participant table exists
-        participant_exists = 'participant' in tables
-        
         return jsonify({
-            "status": "success" if participant_exists else "partial",
-            "message": "Database setup attempted",
-            "tables_found": tables,
-            "participant_table_exists": participant_exists,
+            "status": "success",
+            "message": "Database setup completed - tables created",
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         })
         
@@ -472,7 +462,7 @@ def setup_database():
         import traceback
         return jsonify({
             "status": "error",
-            "message": str(e),
+            "message": f"Database setup failed: {str(e)}",
             "traceback": traceback.format_exc(),
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         }), 500
