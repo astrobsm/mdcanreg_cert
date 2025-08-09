@@ -531,11 +531,13 @@ def test_table_exists():
 
 @app.route('/api/setup-db')
 def setup_database():
-    """Set up database tables manually"""
+    """Set up database tables manually using SQL DDL"""
     try:
-        # Create the participant table using raw SQL with autocommit
-        create_sql = """
-        CREATE TABLE IF NOT EXISTS participant (
+        # Complete SQL to create the participant table with all required columns
+        create_participant_table = """
+        DROP TABLE IF EXISTS participant CASCADE;
+        
+        CREATE TABLE participant (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             email VARCHAR(100) NOT NULL,
@@ -552,20 +554,51 @@ def setup_database():
             certificate_id VARCHAR(50),
             date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             registration_status VARCHAR(20) DEFAULT 'Pending',
-            registration_fee_paid BOOLEAN DEFAULT FALSE
+            registration_fee_paid BOOLEAN DEFAULT FALSE,
+            
+            -- Add constraints
+            CONSTRAINT unique_registration_number UNIQUE (registration_number),
+            CONSTRAINT unique_certificate_id UNIQUE (certificate_id),
+            CONSTRAINT unique_email UNIQUE (email)
         );
+        
+        -- Create indexes for better performance
+        CREATE INDEX idx_participant_email ON participant(email);
+        CREATE INDEX idx_participant_registration_number ON participant(registration_number);
+        CREATE INDEX idx_participant_certificate_id ON participant(certificate_id);
+        CREATE INDEX idx_participant_cert_sent ON participant(cert_sent);
+        CREATE INDEX idx_participant_registration_status ON participant(registration_status);
         """
         
-        # Try with autocommit connection
-        connection = db.engine.connect()
-        connection.execute(sa.text("SET autocommit = true"))
-        connection.execute(sa.text(create_sql))
-        connection.close()
+        # Execute the SQL in a transaction
+        with db.engine.begin() as connection:
+            # Execute each statement
+            for statement in create_participant_table.split(';'):
+                statement = statement.strip()
+                if statement:
+                    connection.execute(sa.text(statement))
+        
+        # Verify the table was created
+        with db.engine.connect() as connection:
+            # Check table structure
+            result = connection.execute(sa.text("""
+                SELECT column_name, data_type, is_nullable, column_default
+                FROM information_schema.columns 
+                WHERE table_name = 'participant' 
+                ORDER BY ordinal_position
+            """))
+            columns = [{"name": row[0], "type": row[1], "nullable": row[2], "default": row[3]} for row in result.fetchall()]
+            
+            # Count records
+            count_result = connection.execute(sa.text("SELECT COUNT(*) FROM participant"))
+            record_count = count_result.fetchone()[0]
         
         return jsonify({
-            "status": "success", 
-            "message": "Participant table created using raw SQL with autocommit",
-            "database_url_configured": bool(os.environ.get('DATABASE_URL'))
+            "status": "success",
+            "message": "Participant table created successfully with all constraints and indexes",
+            "table_structure": columns,
+            "record_count": record_count,
+            "timestamp": datetime.utcnow().isoformat()
         })
         
     except Exception as e:
@@ -574,7 +607,7 @@ def setup_database():
             "status": "error",
             "message": f"Database setup failed: {str(e)}",
             "traceback": traceback.format_exc(),
-            "database_url_configured": bool(os.environ.get('DATABASE_URL'))
+            "timestamp": datetime.utcnow().isoformat()
         }), 500
 
 @app.route('/api/init-database', methods=['GET', 'POST'])
