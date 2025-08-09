@@ -448,15 +448,23 @@ def serve_static_files(filename):
     ]
     
     if filename in static_files:
+        # Get the current working directory (should be project root)
+        project_root = os.getcwd()
+        
         # Try to serve from frontend/public first
-        frontend_public_path = os.path.join('frontend', 'public', filename)
+        frontend_public_path = os.path.join(project_root, 'frontend', 'public', filename)
         if os.path.exists(frontend_public_path):
             return send_file(frontend_public_path)
         
         # Try to serve from build directory
-        build_path = os.path.join(FRONTEND_BUILD_FOLDER, filename)
+        build_path = os.path.join(project_root, 'build', filename)
         if os.path.exists(build_path):
             return send_file(build_path)
+            
+        # Try frontend/build directory
+        frontend_build_path = os.path.join(project_root, 'frontend', 'build', filename)
+        if os.path.exists(frontend_build_path):
+            return send_file(frontend_build_path)
     
     # If not a static file we serve, let the catch-all handle it
     return serve_react()
