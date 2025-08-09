@@ -579,8 +579,46 @@ def serve_react(path):
     if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
         return send_from_directory(static_folder, 'index.html')
     
-    # Return 404 for other paths
-    return jsonify({"error": "Path not found"}), 404
+    # If frontend is still not found, return a helpful page
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>MDCAN BDM 2025 Certificate Platform</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .header { color: #008000; }
+            .error { color: #d32f2f; background: #ffebee; padding: 15px; border-radius: 4px; }
+            .info { color: #1976d2; background: #e3f2fd; padding: 15px; border-radius: 4px; margin-top: 20px; }
+            .debug { background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 20px; font-family: monospace; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="header">MDCAN BDM 2025 Certificate Platform</h1>
+            <div class="error">
+                <h3>Frontend Not Available</h3>
+                <p>The React frontend build files are not found. This usually happens during deployment.</p>
+            </div>
+            <div class="info">
+                <h3>API Endpoints Available:</h3>
+                <ul>
+                    <li><a href="/api/status">/api/status</a> - Platform status</li>
+                    <li><a href="/api/participants">/api/participants</a> - Participant management</li>
+                    <li><a href="/api/statistics">/api/statistics</a> - Platform statistics</li>
+                    <li><a href="/api/debug/files">/api/debug/files</a> - Debug file structure</li>
+                    <li><a href="/health">/health</a> - Health check</li>
+                </ul>
+            </div>
+            <div class="debug">
+                <strong>Static folder:</strong> ''' + str(static_folder) + '''<br>
+                <strong>Frontend build folder:</strong> ''' + str(FRONTEND_BUILD_FOLDER) + '''
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
 
 # API routes for participant management
 @app.route('/api/participants', methods=['GET'])
@@ -861,6 +899,50 @@ def bulk_add_participants():
         }), 500
 
 # Statistics endpoint
+@app.route('/api/debug/files')
+def debug_files():
+    """Debug endpoint to show available files and directories"""
+    file_structure = {}
+    
+    try:
+        # Check current working directory
+        import os
+        current_dir = os.getcwd()
+        file_structure["current_directory"] = current_dir
+        file_structure["static_folder"] = static_folder
+        file_structure["frontend_build_folder"] = FRONTEND_BUILD_FOLDER
+        
+        # List files in current directory
+        file_structure["root_files"] = []
+        for item in os.listdir('.'):
+            if os.path.isfile(item):
+                file_structure["root_files"].append(item)
+            elif os.path.isdir(item):
+                file_structure[f"dir_{item}"] = []
+                try:
+                    for subitem in os.listdir(item)[:10]:  # Limit to first 10 items
+                        file_structure[f"dir_{item}"].append(subitem)
+                except:
+                    file_structure[f"dir_{item}"] = ["Permission denied"]
+        
+        # Check specifically for frontend build
+        frontend_paths_checked = []
+        for path in ['frontend/build', '../frontend/build', './frontend/build', '/app/frontend/build', 'build']:
+            exists = os.path.exists(path)
+            has_index = os.path.exists(os.path.join(path, 'index.html')) if exists else False
+            frontend_paths_checked.append({
+                "path": path,
+                "exists": exists,
+                "has_index_html": has_index
+            })
+        
+        file_structure["frontend_paths_checked"] = frontend_paths_checked
+        
+    except Exception as e:
+        file_structure["error"] = str(e)
+    
+    return jsonify(file_structure)
+
 @app.route('/api/statistics', methods=['GET'])
 def get_statistics():
     try:
