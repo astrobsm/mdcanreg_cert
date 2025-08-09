@@ -41,6 +41,10 @@ try:
     
 except Exception as e:
     logging.error(f"❌ Failed to load application: {e}")
+    logging.error(f"❌ Exception type: {type(e).__name__}")
+    import traceback
+    logging.error(f"❌ Full traceback: {traceback.format_exc()}")
+    
     # Create a basic Flask app as fallback
     from flask import Flask, jsonify
     app = Flask(__name__)
@@ -51,7 +55,21 @@ except Exception as e:
     
     @app.route('/')
     def root():
-        return jsonify({"message": "Application failed to load", "error": str(e)}), 500
+        return jsonify({
+            "message": "Application failed to load", 
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "note": "Check application logs for full traceback"
+        }), 500
+    
+    @app.route('/debug')
+    def debug():
+        import traceback
+        return jsonify({
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "traceback": traceback.format_exc()
+        }), 500
 
 if __name__ == "__main__":
     # Use $PORT environment variable with fallback to 8080
