@@ -434,50 +434,23 @@ def db_test():
 def setup_database():
     """Set up database tables manually"""
     try:
-        # Simple participant table creation
-        with db.engine.connect() as connection:
-            # Test connection
-            connection.execute(sa.text('SELECT 1'))
-            
-            # Create the participant table manually
-            create_table_sql = """
-            CREATE TABLE IF NOT EXISTS participant (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
-                email VARCHAR(100) NOT NULL,
-                role VARCHAR(50) DEFAULT 'Attendee',
-                cert_type VARCHAR(50) DEFAULT 'participation',
-                registration_number VARCHAR(50) UNIQUE,
-                phone VARCHAR(20),
-                gender VARCHAR(10),
-                specialty VARCHAR(100),
-                state VARCHAR(50),
-                hospital VARCHAR(100),
-                cert_sent BOOLEAN DEFAULT FALSE,
-                cert_sent_date TIMESTAMP,
-                certificate_id VARCHAR(50) UNIQUE,
-                date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                registration_status VARCHAR(20) DEFAULT 'Pending',
-                registration_fee_paid BOOLEAN DEFAULT FALSE
-            );
-            """
-            
-            connection.execute(sa.text(create_table_sql))
-            connection.commit()
-        
-        # Now try SQLAlchemy's create_all as well
+        # Use SQLAlchemy's built-in table creation
         db.create_all()
         
-        # Check what tables exist
+        # Test if tables were created by checking the participant table
         from sqlalchemy import inspect
         inspector = inspect(db.engine)
         tables = inspector.get_table_names()
         
+        # Check if participant table exists
+        participant_exists = 'participant' in tables
+        
         return jsonify({
-            "status": "success",
-            "message": "Database setup completed",
-            "tables": tables,
-            "method": "manual_sql_plus_sqlalchemy"
+            "status": "success" if participant_exists else "partial",
+            "message": "Database setup attempted",
+            "tables_found": tables,
+            "participant_table_exists": participant_exists,
+            "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         })
         
     except Exception as e:
@@ -485,7 +458,8 @@ def setup_database():
         return jsonify({
             "status": "error",
             "message": str(e),
-            "traceback": traceback.format_exc()
+            "traceback": traceback.format_exc(),
+            "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         }), 500
 
 @app.route('/api/init-database', methods=['GET', 'POST'])
