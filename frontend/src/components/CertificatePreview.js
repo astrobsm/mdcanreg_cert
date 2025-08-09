@@ -34,11 +34,11 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       
       <div className="conference-details-preview">
         <div className="event-name-preview">
-          MDCAN BDM 042-2025
+           14th Biennial Delegates' Meeting and SCIENTIFIC Conference 
         </div>
         
         <div className="certificate-text">
-          held on 1st–6th September, 2025
+          HELD IN ENUGU on 1st–6th September, 2025
         </div>
       </div>
       

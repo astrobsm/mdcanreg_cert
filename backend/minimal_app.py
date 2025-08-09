@@ -464,6 +464,29 @@ def create_all_tables():
             "timestamp": datetime.utcnow().isoformat()
         }), 500
 
+@app.route('/api/force-create')
+def force_create_tables():
+    """Force create tables using SQLAlchemy"""
+    try:
+        # Force table creation using SQLAlchemy in app context
+        with app.app_context():
+            db.create_all()
+        
+        return jsonify({
+            "status": "success",
+            "message": "SQLAlchemy create_all() executed successfully",
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error", 
+            "message": f"SQLAlchemy create_all failed: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
+
 @app.route('/api/db-test')
 def db_test():
     """Simple database test endpoint - v3"""
