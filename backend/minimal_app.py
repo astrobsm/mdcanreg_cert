@@ -422,13 +422,28 @@ def status():
 
 @app.route('/api/db-test')
 def db_test():
-    """Simple database test endpoint - v2"""
-    return jsonify({
-        "status": "ok",
-        "message": "Database test endpoint reached - version 2",
-        "timestamp": datetime.utcnow().isoformat(),
-        "database_url_configured": bool(os.environ.get('DATABASE_URL'))
-    })
+    """Simple database test endpoint - v3"""
+    try:
+        # Test database connection
+        with db.engine.connect() as connection:
+            result = connection.execute(sa.text('SELECT 1 as test')).fetchone()
+            test_value = result[0] if result else None
+        
+        return jsonify({
+            "status": "ok",
+            "message": "Database connection successful",
+            "test_query_result": test_value,
+            "timestamp": datetime.utcnow().isoformat(),
+            "database_url_configured": bool(os.environ.get('DATABASE_URL'))
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"Database connection failed: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "database_url_configured": bool(os.environ.get('DATABASE_URL'))
+        }), 500
 
 @app.route('/api/setup-db')
 def setup_database():
