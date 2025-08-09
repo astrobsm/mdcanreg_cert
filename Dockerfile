@@ -17,4 +17,5 @@ COPY . .
 
 EXPOSE 8080
 
-CMD gunicorn --bind 0.0.0.0:${PORT:-8080} app:app
+# Use environment variable for port binding
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 120 --log-level info app:app"]

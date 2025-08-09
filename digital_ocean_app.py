@@ -22,9 +22,18 @@ app = Flask(__name__,
 # Health check endpoint - CRITICAL for Digital Ocean health checks
 @app.route('/health')
 def health():
-    return jsonify({"status": "healthy", "service": "MDCAN BDM 2025"})
+    return jsonify({"status": "healthy", "service": "MDCAN BDM 2025"}), 200
 
-# Root endpoint
+# Additional health check routes
+@app.route('/healthz')
+def healthz():
+    return jsonify({"status": "ok"}), 200
+
+@app.route('/ready')
+def ready():
+    return jsonify({"ready": True}), 200
+
+# Root endpoint - serves as primary health check
 @app.route('/')
 def root():
     return jsonify({
@@ -32,7 +41,7 @@ def root():
         "message": "MDCAN BDM 2025 Certificate Platform", 
         "version": "1.0.0",
         "deployment": "Digital Ocean App Platform"
-    })
+    }), 200
 
 # Log environment info (excluding sensitive data)
 logging.info("=== MDCAN BDM 2025 Application Starting ===")
@@ -59,9 +68,9 @@ except Exception as e:
     logging.warning(f"⚠️  Could not load full application: {e}")
     logging.info("🔄 Running in basic mode with health checks only")
 
-# Serve React frontend
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+# Serve React frontend (for non-API routes)
+@app.route('/app', defaults={'path': ''})
+@app.route('/app/<path:path>')
 def serve_frontend(path):
     """Serve React frontend files"""
     try:
@@ -75,6 +84,8 @@ def serve_frontend(path):
         return jsonify({"error": "Frontend not available"}), 404
 
 if __name__ == "__main__":
-    port = 8080  # Fixed port for Digital Ocean
-    logging.info(f"🚀 Starting MDCAN BDM 2025 server on port {port}")
+    # Use $PORT environment variable with fallback to 8080
+    port = int(os.environ.get('PORT', 8080))
+    logging.info(f"🚀 Starting MDCAN BDM 2025 server on 0.0.0.0:{port}")
+    logging.info(f"PORT environment variable: {os.environ.get('PORT', 'not set, using default 8080')}")
     app.run(host='0.0.0.0', port=port, debug=False)
