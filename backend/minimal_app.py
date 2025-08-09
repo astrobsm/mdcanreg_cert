@@ -156,15 +156,18 @@ CERT_SERVICE_TEXT = "the successful hosting of the MEDICAL AND DENTAL CONSULTANT
 
 # Helper function to load and encode signature files
 def load_signature_file(filename):
-    """Load signature file and return base64 encoded string"""
+    """Load signature file and return base64 encoded string with proper MIME type"""
     try:
         # Try multiple possible paths for the signature files
         possible_paths = [
             f'frontend/public/{filename}',
+            f'backend/static/{filename}',
             f'../frontend/public/{filename}',
             f'./frontend/public/{filename}',
             f'/app/frontend/public/{filename}',
+            f'/app/backend/static/{filename}',
             f'public/{filename}',
+            f'static/{filename}',
             filename
         ]
         
@@ -172,9 +175,17 @@ def load_signature_file(filename):
             if os.path.exists(path):
                 with open(path, 'rb') as f:
                     image_data = f.read()
+                    # Determine MIME type
+                    if filename.lower().endswith('.png'):
+                        mime_type = 'image/png'
+                    elif filename.lower().endswith(('.jpg', '.jpeg')):
+                        mime_type = 'image/jpeg'
+                    else:
+                        mime_type = 'image/png'  # Default
+                    
                     encoded = base64.b64encode(image_data).decode('utf-8')
-                    print(f"Loaded signature file: {path}")
-                    return encoded
+                    print(f"Loaded signature file: {path} ({len(image_data)} bytes, {mime_type})")
+                    return f"data:{mime_type};base64,{encoded}"
         
         print(f"Warning: Signature file {filename} not found in any of the expected paths")
         return ""
@@ -435,6 +446,24 @@ def health_check():
     """Health check endpoint for Digital Ocean"""
     return jsonify({"status": "healthy"})
 
+@app.route('/static/<path:filename>')
+def serve_static_assets(filename):
+    """Serve static assets for production deployment"""
+    try:
+        # Try to serve from the frontend build static directory
+        static_path = os.path.join(FRONTEND_BUILD_FOLDER, 'static', filename)
+        if os.path.exists(static_path):
+            return send_file(static_path)
+        
+        # Fallback to project root static
+        root_static_path = os.path.join(os.getcwd(), 'static', filename)
+        if os.path.exists(root_static_path):
+            return send_file(root_static_path)
+            
+        return "File not found", 404
+    except Exception as e:
+        return f"Error serving static file: {str(e)}", 500
+
 @app.route('/<filename>')
 def serve_static_files(filename):
     """Serve signature files and other static assets"""
@@ -467,7 +496,7 @@ def serve_static_files(filename):
             return send_file(frontend_build_path)
     
     # If not a static file we serve, let the catch-all handle it
-    return serve_react()
+    return serve_react(filename)
 
 @app.route('/api/test')
 def test():
@@ -943,9 +972,9 @@ def generate_certificate(participant_id):
                 name=participant.name,
                 service_text=CERT_SERVICE_TEXT,
                 certificate_id=participant.certificate_id,
-                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
-                secretary_signature=SECRETARY_SIGNATURE_BASE64,
-                logo="" # Base64 encoded logo would go here
+                chairman_signature=CHAIRMAN_SIGNATURE,
+                secretary_signature=SECRETARY_SIGNATURE,
+                logo=MDCAN_LOGO
             )
         else:
             # Default to participation certificate
@@ -954,9 +983,9 @@ def generate_certificate(participant_id):
                 name=participant.name,
                 event_text=CERT_EVENT_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature=PRESIDENT_SIGNATURE_BASE64,
-                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
-                logo="" # Base64 encoded logo would go here
+                president_signature=PRESIDENT_SIGNATURE,
+                chairman_signature=CHAIRMAN_SIGNATURE,
+                logo=MDCAN_LOGO
             )
             
         # Generate PDF
@@ -1094,9 +1123,9 @@ def send_certificate(participant_id):
                 name=participant.name,
                 service_text=CERT_SERVICE_TEXT,
                 certificate_id=participant.certificate_id,
-                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
-                secretary_signature=SECRETARY_SIGNATURE_BASE64,
-                logo="" # Base64 encoded logo would go here
+                chairman_signature=CHAIRMAN_SIGNATURE,
+                secretary_signature=SECRETARY_SIGNATURE,
+                logo=MDCAN_LOGO
             )
         else:
             # Default to participation certificate
@@ -1105,9 +1134,9 @@ def send_certificate(participant_id):
                 name=participant.name,
                 event_text=CERT_EVENT_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature=PRESIDENT_SIGNATURE_BASE64,
-                chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
-                logo="" # Base64 encoded logo would go here
+                president_signature=PRESIDENT_SIGNATURE,
+                chairman_signature=CHAIRMAN_SIGNATURE,
+                logo=MDCAN_LOGO
             )
         
         # Generate PDF
