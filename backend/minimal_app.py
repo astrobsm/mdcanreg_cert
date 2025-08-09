@@ -911,43 +911,68 @@ def get_statistics():
 @app.route('/<path:path>')
 def serve_react(path):
     """Serve the React frontend"""
-    print(f"Route requested: '{path}', static_folder: {static_folder}")
-    
-    # Handle API routes - return 404 if specific route not found
-    if path and path.startswith('api/'):
-        print(f"API route requested: {path} - route not found")
-        return jsonify({"error": "API endpoint not found", "path": path}), 404
-    
-    # Handle specific frontend files
-    if path and '.' in path:
-        if static_folder and os.path.exists(os.path.join(static_folder, path)):
-            print(f"Serving file: {path}")
-            return send_from_directory(static_folder, path)
-        else:
-            print(f"File not found: {path}")
-            return jsonify({"error": "File not found", "path": path}), 404
-    
-    # For root path or any non-API path, serve index.html
-    if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
-        print(f"Serving index.html from: {static_folder}")
-        return send_from_directory(static_folder, 'index.html')
-    
-    print(f"Frontend not available - static_folder: {static_folder}")
-    
-    # Debugging information when frontend is not available
-    debug_info = {
-        "status": "ok",
-        "message": "MDCAN BDM 2025 Certificate Platform",
-        "frontend_status": "Frontend build not found",
-        "static_folder": static_folder,
-        "requested_path": path,
-        "environment": {
-            "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
-            "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
+    try:
+        print(f"=== SERVE_REACT DEBUG START ===")
+        print(f"Route requested: '{path}'")
+        print(f"static_folder: {static_folder}")
+        print(f"FRONTEND_BUILD_FOLDER: {FRONTEND_BUILD_FOLDER}")
+        
+        # Handle API routes - return 404 if specific route not found
+        if path and path.startswith('api/'):
+            print(f"API route requested: {path} - route not found")
+            return jsonify({"error": "API endpoint not found", "path": path}), 404
+        
+        # Handle specific frontend files
+        if path and '.' in path:
+            if static_folder and os.path.exists(os.path.join(static_folder, path)):
+                print(f"Serving file: {path}")
+                return send_from_directory(static_folder, path)
+            else:
+                print(f"File not found: {path}")
+                return jsonify({"error": "File not found", "path": path}), 404
+        
+        # For root path or any non-API path, serve index.html
+        print(f"Checking for index.html in static_folder: {static_folder}")
+        
+        if static_folder:
+            index_path = os.path.join(static_folder, 'index.html')
+            print(f"Index path: {index_path}")
+            print(f"Index exists: {os.path.exists(index_path)}")
+            
+            if os.path.exists(index_path):
+                print(f"Serving index.html from: {static_folder}")
+                return send_from_directory(static_folder, 'index.html')
+        
+        print(f"Frontend not available - static_folder: {static_folder}")
+        
+        # Debugging information when frontend is not available
+        debug_info = {
+            "status": "debug",
+            "message": "MDCAN BDM 2025 Certificate Platform - Frontend Not Available",
+            "frontend_status": "Frontend build not found",
+            "static_folder": static_folder,
+            "FRONTEND_BUILD_FOLDER": FRONTEND_BUILD_FOLDER,
+            "requested_path": path,
+            "possible_paths": possible_frontend_paths,
+            "environment": {
+                "DATABASE_URL": bool(os.environ.get('DATABASE_URL')),
+                "EMAIL_HOST": bool(os.environ.get('EMAIL_HOST'))
+            }
         }
-    }
-    
-    return jsonify(debug_info)
+        
+        print(f"=== SERVE_REACT DEBUG END ===")
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        print(f"ERROR in serve_react: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": "Server error in serve_react",
+            "message": str(e),
+            "path": path,
+            "static_folder": static_folder
+        }), 500
 
 # Initialize the application
 if __name__ == "__main__":
