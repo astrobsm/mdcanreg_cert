@@ -151,8 +151,8 @@ EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 EMAIL_FROM = os.environ.get('EMAIL_FROM', 'MDCAN BDM 2025 <noreply@mdcan.org>')
 
 # Certificate template configuration
-CERT_EVENT_TEXT = "MDCAN BDM 14th – 2025 held in Enugu on 1st – 6th September, 2025"
-CERT_SERVICE_TEXT = "the successful hosting of the MDCAN BDM 14th – 2025 on 1st – 6th September 2025"
+CERT_EVENT_TEXT = "MEDICAL AND DENTAL CONSULTANTS' ASSOCIATION OF NIGERIA 14th Biennial Delegates' Meeting and SCIENTIFIC Conference on 1st–6th September, 2025"
+CERT_SERVICE_TEXT = "the successful hosting of the MEDICAL AND DENTAL CONSULTANTS' ASSOCIATION OF NIGERIA 14th Biennial Delegates' Meeting and SCIENTIFIC Conference on 1st–6th September, 2025"
 
 # Helper function to load and encode signature files
 def load_signature_file(filename):
@@ -289,7 +289,7 @@ PARTICIPATION_CERTIFICATE_TEMPLATE = """
         
         <div class="footer">
             <div class="signature">
-                <img src="data:image/png;base64,{{ president_signature }}" alt="President's Signature">
+                <img src="data:image/jpeg;base64,{{ president_signature }}" alt="President's Signature">
                 <div class="signature-name">Prof. Aminu Mohammed</div>
                 <div class="signature-title">MDCAN President</div>
             </div>
@@ -402,15 +402,15 @@ SERVICE_CERTIFICATE_TEMPLATE = """
         
         <div class="footer">
             <div class="signature">
-                <img src="data:image/png;base64,{{ president_signature }}" alt="President's Signature">
-                <div class="signature-name">Prof. Aminu Mohammed</div>
-                <div class="signature-title">MDCAN President</div>
-            </div>
-            
-            <div class="signature">
                 <img src="data:image/png;base64,{{ chairman_signature }}" alt="Chairman's Signature">
                 <div class="signature-name">Prof. Appolos Ndukuba</div>
                 <div class="signature-title">LOC Chairman</div>
+            </div>
+            
+            <div class="signature">
+                <img src="data:image/jpeg;base64,{{ secretary_signature }}" alt="Secretary's Signature">
+                <div class="signature-name">Dr. Augustine Duru</div>
+                <div class="signature-title">LOC Secretary<br/>MDCAN Sec. Gen.</div>
             </div>
         </div>
         
@@ -434,6 +434,32 @@ def health():
 def health_check():
     """Health check endpoint for Digital Ocean"""
     return jsonify({"status": "healthy"})
+
+@app.route('/<filename>')
+def serve_static_files(filename):
+    """Serve signature files and other static assets"""
+    # Define the files that should be served directly
+    static_files = [
+        'president-signature.jpg',
+        'chairman-signature.png', 
+        'Dr_Augustine_Duru_signature.jpg',
+        'logo-mdcan.jpeg',
+        'certificate_background.png'
+    ]
+    
+    if filename in static_files:
+        # Try to serve from frontend/public first
+        frontend_public_path = os.path.join('frontend', 'public', filename)
+        if os.path.exists(frontend_public_path):
+            return send_file(frontend_public_path)
+        
+        # Try to serve from build directory
+        build_path = os.path.join(FRONTEND_BUILD_FOLDER, filename)
+        if os.path.exists(build_path):
+            return send_file(build_path)
+    
+    # If not a static file we serve, let the catch-all handle it
+    return serve_react()
 
 @app.route('/api/test')
 def test():
@@ -909,8 +935,8 @@ def generate_certificate(participant_id):
                 name=participant.name,
                 service_text=CERT_SERVICE_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature=PRESIDENT_SIGNATURE_BASE64,
                 chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
+                secretary_signature=SECRETARY_SIGNATURE_BASE64,
                 logo="" # Base64 encoded logo would go here
             )
         else:
@@ -1060,8 +1086,8 @@ def send_certificate(participant_id):
                 name=participant.name,
                 service_text=CERT_SERVICE_TEXT,
                 certificate_id=participant.certificate_id,
-                president_signature=PRESIDENT_SIGNATURE_BASE64,
                 chairman_signature=CHAIRMAN_SIGNATURE_BASE64,
+                secretary_signature=SECRETARY_SIGNATURE_BASE64,
                 logo="" # Base64 encoded logo would go here
             )
         else:
