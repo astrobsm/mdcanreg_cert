@@ -109,7 +109,7 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       
       <div className="conference-details-preview">
         <div className="event-name-preview">
-          MDCAN BDM 042-2025
+          MEDICAL AND DENTAL CONSULTANTS' ASSOCIATION OF NIGERIA 14th Biennial Delegates' Meeting and SCIENTIFIC Conference
         </div>
         
         <div className="certificate-text">
