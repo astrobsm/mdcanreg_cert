@@ -573,52 +573,6 @@ def serve_react(path):
     }
     
     return jsonify(debug_info)
-        return None
-    
-    # For React router routes, return index.html
-    if static_folder and os.path.exists(os.path.join(static_folder, 'index.html')):
-        return send_from_directory(static_folder, 'index.html')
-    
-    # If frontend is still not found, return a helpful page
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>MDCAN BDM 2025 Certificate Platform</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            .container { max-width: 800px; margin: 0 auto; }
-            .header { color: #008000; }
-            .error { color: #d32f2f; background: #ffebee; padding: 15px; border-radius: 4px; }
-            .info { color: #1976d2; background: #e3f2fd; padding: 15px; border-radius: 4px; margin-top: 20px; }
-            .debug { background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 20px; font-family: monospace; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1 class="header">MDCAN BDM 2025 Certificate Platform</h1>
-            <div class="error">
-                <h3>Frontend Not Available</h3>
-                <p>The React frontend build files are not found. This usually happens during deployment.</p>
-            </div>
-            <div class="info">
-                <h3>API Endpoints Available:</h3>
-                <ul>
-                    <li><a href="/api/status">/api/status</a> - Platform status</li>
-                    <li><a href="/api/participants">/api/participants</a> - Participant management</li>
-                    <li><a href="/api/statistics">/api/statistics</a> - Platform statistics</li>
-                    <li><a href="/api/debug/files">/api/debug/files</a> - Debug file structure</li>
-                    <li><a href="/health">/health</a> - Health check</li>
-                </ul>
-            </div>
-            <div class="debug">
-                <strong>Static folder:</strong> ''' + str(static_folder) + '''<br>
-                <strong>Frontend build folder:</strong> ''' + str(FRONTEND_BUILD_FOLDER) + '''
-            </div>
-        </div>
-    </body>
-    </html>
-    '''
 
 # API routes for participant management
 @app.route('/api/participants', methods=['GET'])
