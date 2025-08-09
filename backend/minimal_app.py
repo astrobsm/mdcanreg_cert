@@ -907,6 +907,16 @@ def get_statistics():
         }), 500
 
 # Serve the React frontend - MUST be at the end to avoid route conflicts
+@app.route('/catch-all-test')
+def catch_all_test():
+    """Test route to verify catch-all routing works"""
+    return jsonify({
+        "status": "success",
+        "message": "Catch-all routing test successful",
+        "static_folder": static_folder,
+        "FRONTEND_BUILD_FOLDER": FRONTEND_BUILD_FOLDER
+    })
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
