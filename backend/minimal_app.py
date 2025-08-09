@@ -420,6 +420,50 @@ def status():
         }
     })
 
+@app.route('/api/create-tables')
+def create_all_tables():
+    """Force create all database tables"""
+    try:
+        # Drop and recreate tables for a clean setup
+        db.drop_all()
+        db.create_all()
+        
+        # Verify table creation by checking the participant table specifically
+        with db.engine.connect() as connection:
+            # Check if participant table exists
+            result = connection.execute(sa.text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_type = 'BASE TABLE'
+            """))
+            tables = [row[0] for row in result.fetchall()]
+            
+            # Try to query the participant table to ensure it's working
+            if 'participant' in tables:
+                count_result = connection.execute(sa.text("SELECT COUNT(*) FROM participant"))
+                participant_count = count_result.fetchone()[0]
+            else:
+                participant_count = "Table not found"
+        
+        return jsonify({
+            "status": "success",
+            "message": "All database tables created successfully",
+            "tables_created": tables,
+            "participant_table_status": "exists" if 'participant' in tables else "missing",
+            "participant_count": participant_count,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"Failed to create tables: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
+
 @app.route('/api/db-test')
 def db_test():
     """Simple database test endpoint - v3"""
