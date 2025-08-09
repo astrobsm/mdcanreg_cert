@@ -5,8 +5,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Production builds
-build/
 dist/
+# Note: frontend/build/ is NOT ignored so it gets deployed
 
 # Environment variables
 .env
