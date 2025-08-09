@@ -38,7 +38,7 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
         </div>
         
         <div className="certificate-text">
-          HELD IN ENUGU on 1st–6th September, 2025
+          on 1st–6th September, 2025
         </div>
       </div>
       
