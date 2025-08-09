@@ -495,11 +495,30 @@ def db_test():
         with db.engine.connect() as connection:
             result = connection.execute(sa.text('SELECT 1 as test')).fetchone()
             test_value = result[0] if result else None
+            
+            # Test if participant table exists
+            try:
+                table_check = connection.execute(sa.text("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'participant'
+                    )
+                """)).fetchone()[0]
+                
+                if table_check:
+                    # If table exists, try to count records
+                    count_result = connection.execute(sa.text("SELECT COUNT(*) FROM participant")).fetchone()[0]
+                    table_status = f"Table exists with {count_result} records"
+                else:
+                    table_status = "Table does not exist"
+            except Exception as e:
+                table_status = f"Error checking table: {str(e)}"
         
         return jsonify({
             "status": "ok",
             "message": "Database connection successful",
             "test_query_result": test_value,
+            "participant_table_status": table_status,
             "timestamp": datetime.utcnow().isoformat(),
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
         })
