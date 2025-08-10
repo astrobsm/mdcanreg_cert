@@ -300,6 +300,108 @@ code {
   }
 }
 
+/* ===== WHATSAPP DASHBOARD SECTION ===== */
+.whatsapp-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 1rem 0;
+}
+
+.whatsapp-group-info {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp-content {
+  text-align: center;
+}
+
+.whatsapp-message h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.whatsapp-message p {
+  margin-bottom: 2rem;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.whatsapp-actions {
+  margin: 2rem 0;
+}
+
+.whatsapp-join-btn {
+  display: inline-block;
+  background: white;
+  color: #25D366;
+  padding: 15px 30px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.whatsapp-join-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  color: #128C7E;
+}
+
+.whatsapp-benefits {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-top: 2rem;
+}
+
+.whatsapp-benefits h5 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.whatsapp-benefits ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.whatsapp-benefits li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.no-whatsapp {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+}
+
+.retry-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: background 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #0056b3;
+}
+
 /* ===== LOADING SPINNER ===== */
 .loading-spinner {
   display: flex;

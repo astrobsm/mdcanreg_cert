@@ -6,6 +6,9 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
     name: '',
     email: '',
     phone_number: '',
+    gender: '',
+    specialty: '',
+    state: '',
     organization: '',
     position: '',
     registration_type: 'participant',
@@ -67,9 +70,19 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
 
       // Prepare form data for file upload
       const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        data.append(key, value);
-      });
+      
+      // Map form fields to match backend expectations
+      data.append('name', formData.name);
+      data.append('email', formData.email);
+      data.append('phone', formData.phone_number); // Map phone_number to phone
+      data.append('gender', formData.gender || '');
+      data.append('specialty', formData.specialty || '');
+      data.append('state', formData.state || '');
+      data.append('hospital', formData.organization || ''); // Map organization to hospital
+      data.append('cert_type', formData.registration_type === 'participant' ? 'participation' : 'service');
+      data.append('role', formData.position || 'Attendee'); // Map position to role
+      data.append('registration_fee_paid', 'false'); // Default to false
+      
       if (evidenceFile) {
         data.append('evidence_of_payment', evidenceFile);
       }
@@ -94,6 +107,9 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
         name: '',
         email: '',
         phone_number: '',
+        gender: '',
+        specialty: '',
+        state: '',
         organization: '',
         position: '',
         registration_type: 'participant',
@@ -130,6 +146,9 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
       name: '',
       email: '',
       phone_number: '',
+      gender: '',
+      specialty: '',
+      state: '',
       organization: '',
       position: '',
       registration_type: 'participant',
@@ -235,6 +254,44 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
                 onChange={handleInputChange}
                 required
                 placeholder="Enter your phone number"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="gender">Gender</label>
+              <select
+                id="gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="specialty">Medical Specialty</label>
+              <input
+                type="text"
+                id="specialty"
+                name="specialty"
+                value={formData.specialty}
+                onChange={handleInputChange}
+                placeholder="e.g. Internal Medicine, Surgery"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="state">State of Practice</label>
+              <input
+                type="text"
+                id="state"
+                name="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                placeholder="Enter your state"
               />
             </div>
 

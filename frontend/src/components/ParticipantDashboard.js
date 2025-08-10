@@ -15,7 +15,12 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/participants/${participantEmail}/dashboard`);
-      setDashboardData(response.data);
+      // Extract dashboard data from the response
+      if (response.data.status === 'success' && response.data.dashboard) {
+        setDashboardData(response.data.dashboard);
+      } else {
+        setMessage('Invalid dashboard data received');
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
       setMessage('Failed to load dashboard data');
@@ -35,7 +40,8 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `MDCAN_BDM_2025_Certificate_${dashboardData.participant.name.replace(' ', '_')}.pdf`);
+      const participantName = dashboardData?.participant?.name || 'Participant';
+      link.setAttribute('download', `MDCAN_BDM_2025_Certificate_${participantName.replace(/\s+/g, '_')}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -97,38 +103,50 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
     return <div className="loading-spinner">Loading your dashboard...</div>;
   }
 
-  if (!dashboardData) {
+  if (!dashboardData || !dashboardData.participant) {
     return (
       <div className="error-state">
         <h3>⚠️ Dashboard Unavailable</h3>
         <p>Unable to load your dashboard. Please try again later.</p>
         {message && <p className="error">{message}</p>}
+        <button onClick={loadDashboardData} className="retry-btn">
+          🔄 Retry Loading
+        </button>
       </div>
     );
   }
 
-  const { participant, registered_sessions, upcoming_programs, recent_notifications, statistics } = dashboardData;
+  const { 
+    participant = {}, 
+    registered_sessions = [], 
+    upcoming_programs = [], 
+    recent_notifications = [], 
+    statistics = {},
+    registration_status = 'Unknown',
+    certificate_id = '',
+    whatsapp_group = null
+  } = dashboardData;
 
   return (
     <div className="participant-dashboard">
       {/* Header */}
       <div className="dashboard-header">
         <div className="welcome-section">
-          <h2>👋 Welcome, {participant.name}!</h2>
+          <h2>👋 Welcome, {participant.name || 'Participant'}!</h2>
           <p>Your MDCAN BDM 2025 Conference Dashboard</p>
         </div>
         
         <div className="registration-info">
           <div className="info-card">
             <h4>Registration Status</h4>
-            <span className={`status-badge ${getStatusColor(participant.registration_status)}`}>
-              {participant.registration_status}
+            <span className={`status-badge ${getStatusColor(registration_status)}`}>
+              {registration_status}
             </span>
           </div>
           
           <div className="info-card">
             <h4>Registration #</h4>
-            <span className="registration-number">{participant.certificate_number}</span>
+            <span className="registration-number">{participant.registration_number || certificate_id}</span>
           </div>
         </div>
       </div>
@@ -164,6 +182,12 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
           onClick={() => setActiveSection('certificate')}
         >
           🏆 Certificate
+        </button>
+        <button 
+          className={activeSection === 'whatsapp' ? 'active' : ''}
+          onClick={() => setActiveSection('whatsapp')}
+        >
+          📱 WhatsApp Group
         </button>
         <button 
           className={activeSection === 'profile' ? 'active' : ''}
@@ -426,6 +450,50 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
           </div>
         )}
 
+        {/* WhatsApp Group */}
+        {activeSection === 'whatsapp' && (
+          <div className="whatsapp-section">
+            <h3>📱 Conference WhatsApp Group</h3>
+            
+            {whatsapp_group ? (
+              <div className="whatsapp-group-info">
+                <div className="whatsapp-content">
+                  <div className="whatsapp-message">
+                    <h4>🎉 {whatsapp_group.message}</h4>
+                    <p>{whatsapp_group.instructions}</p>
+                  </div>
+                  
+                  <div className="whatsapp-actions">
+                    <a 
+                      href={whatsapp_group.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="whatsapp-join-btn"
+                    >
+                      📱 Join WhatsApp Group
+                    </a>
+                  </div>
+                  
+                  <div className="whatsapp-benefits">
+                    <h5>📋 What you'll get in the group:</h5>
+                    <ul>
+                      <li>🔔 Real-time conference updates and announcements</li>
+                      <li>🤝 Networking opportunities with fellow participants</li>
+                      <li>📅 Schedule changes and important notifications</li>
+                      <li>🎯 Quick access to conference organizers</li>
+                      <li>📸 Photos and highlights from the event</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="no-whatsapp">
+                <p>WhatsApp group information is not available at this time.</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Profile */}
         {activeSection === 'profile' && (
           <div className="profile-section">
@@ -435,7 +503,7 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
               <div className="info-grid">
                 <div className="info-item">
                   <strong>Name:</strong>
-                  <span>{participant.name}</span>
+                  <span>{participant.name || 'Not provided'}</span>
                 </div>
                 
                 <div className="info-item">
