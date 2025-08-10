@@ -173,6 +173,37 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
           <div className={`step ${step >= 2 ? 'active' : ''}`}>2</div>
           <div className={`step ${step >= 3 ? 'active' : ''}`}>3</div>
         </div>
+        
+        {/* Alternative Registration Options */}
+        <div className="registration-options">
+          <div className="option-header">
+            <h3>📝 Registration Options</h3>
+            <p>Choose your preferred way to register for MDCAN BDM 2025</p>
+          </div>
+          
+          <div className="options-grid">
+            <div className="option-card active">
+              <div className="option-icon">🖥️</div>
+              <h4>Online Registration Form</h4>
+              <p>Complete registration using our interactive form below</p>
+              <span className="option-status">Current Option</span>
+            </div>
+            
+            <div className="option-card">
+              <div className="option-icon">📋</div>
+              <h4>Google Forms Alternative</h4>
+              <p>Use our backup Google Forms registration if you experience issues</p>
+              <a 
+                href="https://docs.google.com/forms/d/e/1FAIpQLSc-OiAeDWbgsi_Qru1V7vBZ9HUTJbzVzC9TmZehlmErzxT8KQ/viewform?usp=header"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="option-link"
+              >
+                Open Google Forms →
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Alternative Registration Option */}
