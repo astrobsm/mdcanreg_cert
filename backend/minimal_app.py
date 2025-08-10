@@ -1085,6 +1085,95 @@ def create_participant():
             "message": str(e)
         }), 500
 
+@app.route('/api/register', methods=['POST'])
+def register_participant():
+    """Registration endpoint that handles multipart form data"""
+    try:
+        # Handle multipart form data
+        form_data = request.form
+        files = request.files
+        
+        # Extract form data
+        name = form_data.get('name')
+        email = form_data.get('email')
+        phone = form_data.get('phone')
+        gender = form_data.get('gender')
+        specialty = form_data.get('specialty')
+        state = form_data.get('state')
+        hospital = form_data.get('hospital')
+        cert_type = form_data.get('cert_type', 'participation')
+        role = form_data.get('role', 'Attendee')
+        registration_fee_paid = form_data.get('registration_fee_paid', 'false').lower() == 'true'
+        
+        # Validate required fields
+        if not name or not email:
+            return jsonify({
+                "status": "error",
+                "message": "Name and email are required"
+            }), 400
+        
+        # Check if email already exists
+        existing_participant = Participant.query.filter_by(email=email).first()
+        if existing_participant:
+            return jsonify({
+                "status": "error",
+                "message": "Email already registered. Please use a different email."
+            }), 400
+        
+        # Generate unique identifiers
+        registration_number = f"MDCAN-{uuid.uuid4().hex[:8].upper()}"
+        certificate_id = f"CERT-{uuid.uuid4().hex[:12].upper()}"
+        
+        # Handle file upload (evidence of payment)
+        evidence_file = None
+        if 'evidence_of_payment' in files:
+            evidence_file = files['evidence_of_payment']
+            if evidence_file.filename:
+                # Create uploads directory if it doesn't exist
+                upload_dir = os.path.join('backend', 'uploads')
+                if not os.path.exists(upload_dir):
+                    os.makedirs(upload_dir)
+                
+                # Save file with unique name
+                filename = f"{registration_number}_{evidence_file.filename}"
+                file_path = os.path.join(upload_dir, filename)
+                evidence_file.save(file_path)
+        
+        # Create new participant
+        new_participant = Participant(
+            name=name,
+            email=email,
+            phone=phone,
+            gender=gender,
+            specialty=specialty,
+            state=state,
+            hospital=hospital,
+            role=role,
+            cert_type=cert_type,
+            registration_number=registration_number,
+            certificate_id=certificate_id,
+            registration_status='Pending' if not registration_fee_paid else 'Confirmed',
+            registration_fee_paid=registration_fee_paid
+        )
+        
+        db.session.add(new_participant)
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Registration successful! Welcome to MDCAN BDM 2025.",
+            "participant": new_participant.to_dict(),
+            "registration_number": registration_number,
+            "certificate_id": certificate_id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "status": "error", 
+            "message": f"Registration failed: {str(e)}"
+        }), 500
+
 @app.route('/api/participants/<int:id>', methods=['GET'])
 def get_participant(id):
     try:
