@@ -1285,6 +1285,40 @@ def get_participant(id):
             "message": str(e)
         }), 500
 
+@app.route('/api/participants/<email>/dashboard', methods=['GET'])
+def get_participant_dashboard(email):
+    """Get participant dashboard information by email"""
+    try:
+        participant = Participant.query.filter_by(email=email).first()
+        if not participant:
+            return jsonify({
+                "status": "error",
+                "message": "Participant not found"
+            }), 404
+            
+        dashboard_data = {
+            "participant": participant.to_dict(),
+            "registration_status": participant.registration_status,
+            "certificate_sent": participant.cert_sent,
+            "registration_number": participant.registration_number,
+            "certificate_id": participant.certificate_id,
+            "whatsapp_group": {
+                "message": "Join the MDCAN BDM 2025 Conference WhatsApp group to stay updated!",
+                "link": "https://chat.whatsapp.com/E0JkGqBhM362Z2fwHyiv8k",
+                "instructions": "Click the link above to join the conference WhatsApp group for important updates, networking, and real-time conference information."
+            }
+        }
+        
+        return jsonify({
+            "status": "success",
+            "dashboard": dashboard_data
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 # Email certificate function
 @app.route('/api/send-certificate/<int:participant_id>', methods=['POST'])
 def send_certificate(participant_id):
