@@ -868,6 +868,92 @@ def setup_database():
             "timestamp": datetime.utcnow().isoformat()
         }), 500
 
+@app.route('/api/setup-production', methods=['POST'])
+def setup_production_database():
+    """Special endpoint to setup production database with proper permissions"""
+    try:
+        # Get the secret key from request to prevent unauthorized access
+        secret = request.form.get('secret') or request.json.get('secret') if request.is_json else None
+        
+        if secret != 'mdcansetup2025':
+            return jsonify({
+                "status": "error",
+                "message": "Unauthorized access"
+            }), 403
+        
+        execution_log = []
+        
+        # Create the participant table with IF NOT EXISTS to avoid permission errors
+        create_sql = """
+        CREATE TABLE IF NOT EXISTS participant (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            role VARCHAR(50) DEFAULT 'Attendee',
+            cert_type VARCHAR(50) DEFAULT 'participation',
+            registration_number VARCHAR(50),
+            phone VARCHAR(20),
+            gender VARCHAR(10),
+            specialty VARCHAR(100),
+            state VARCHAR(50),
+            hospital VARCHAR(100),
+            cert_sent BOOLEAN DEFAULT FALSE,
+            cert_sent_date TIMESTAMP,
+            certificate_id VARCHAR(50),
+            date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            registration_status VARCHAR(20) DEFAULT 'Pending',
+            registration_fee_paid BOOLEAN DEFAULT FALSE
+        )
+        """
+        
+        # Execute using database connection
+        with db.engine.connect() as connection:
+            # Try to create the table
+            try:
+                connection.execute(sa.text(create_sql))
+                connection.commit()
+                execution_log.append("✅ Participant table created successfully")
+            except Exception as create_error:
+                # If table creation fails, check if table already exists
+                try:
+                    result = connection.execute(sa.text("SELECT COUNT(*) FROM participant"))
+                    count = result.fetchone()[0]
+                    execution_log.append(f"ℹ️ Table already exists with {count} records")
+                except:
+                    execution_log.append(f"❌ Table creation failed: {str(create_error)}")
+                    raise create_error
+            
+            # Verify table structure
+            try:
+                result = connection.execute(sa.text("""
+                    SELECT column_name, data_type 
+                    FROM information_schema.columns 
+                    WHERE table_name = 'participant' 
+                    ORDER BY ordinal_position
+                """))
+                columns = [f"{row[0]} ({row[1]})" for row in result.fetchall()]
+                execution_log.append(f"✅ Table structure verified: {len(columns)} columns")
+            except Exception as verify_error:
+                execution_log.append(f"⚠️ Table verification failed: {str(verify_error)}")
+        
+        return jsonify({
+            "status": "success",
+            "message": "Production database setup completed successfully",
+            "execution_log": execution_log,
+            "table_columns": columns if 'columns' in locals() else [],
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"Production database setup failed: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "execution_log": execution_log if 'execution_log' in locals() else [],
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
+
 @app.route('/api/init-database', methods=['GET', 'POST'])
 def init_database():
     """Initialize database tables"""
@@ -1164,7 +1250,12 @@ def register_participant():
             "message": "Registration successful! Welcome to MDCAN BDM 2025.",
             "participant": new_participant.to_dict(),
             "registration_number": registration_number,
-            "certificate_id": certificate_id
+            "certificate_id": certificate_id,
+            "whatsapp_group": {
+                "message": "Join the MDCAN BDM 2025 Conference WhatsApp group to stay updated!",
+                "link": "https://chat.whatsapp.com/E0JkGqBhM362Z2fwHyiv8k",
+                "instructions": "Click the link above to join the conference WhatsApp group for important updates, networking, and real-time conference information."
+            }
         }), 201
         
     except Exception as e:

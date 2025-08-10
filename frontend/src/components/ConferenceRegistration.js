@@ -22,6 +22,8 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [step, setStep] = useState(1);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [whatsappGroupInfo, setWhatsappGroupInfo] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -79,6 +81,13 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
       });
 
       setMessage('Registration successful! Welcome to MDCAN BDM 2025.');
+      setRegistrationSuccess(true);
+
+      // Store WhatsApp group info if provided
+      const whatsappInfo = response.data.whatsapp_group;
+      if (whatsappInfo) {
+        setWhatsappGroupInfo(whatsappInfo);
+      }
 
       // Reset form
       setFormData({
@@ -112,6 +121,29 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
     }
   };
 
+  const startNewRegistration = () => {
+    setRegistrationSuccess(false);
+    setWhatsappGroupInfo(null);
+    setMessage('');
+    setStep(1);
+    setFormData({
+      name: '',
+      email: '',
+      phone_number: '',
+      organization: '',
+      position: '',
+      registration_type: 'participant',
+      dietary_requirements: '',
+      special_needs: '',
+      emergency_contact_name: '',
+      emergency_contact_phone: '',
+      email_notifications: true,
+      sms_notifications: false,
+      push_notifications: true
+    });
+    setEvidenceFile(null);
+  };
+
   return (
     <div className="registration-container">
       <div className="registration-header">
@@ -130,7 +162,37 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="registration-form">
+      {registrationSuccess && whatsappGroupInfo && (
+        <div className="whatsapp-group-info success">
+          <h3>🎉 Join Our WhatsApp Group!</h3>
+          <p>{whatsappGroupInfo.message}</p>
+          <div className="whatsapp-link-container">
+            <a 
+              href={whatsappGroupInfo.link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="whatsapp-join-btn"
+            >
+              📱 Join WhatsApp Group
+            </a>
+          </div>
+          <p className="whatsapp-instructions">
+            {whatsappGroupInfo.instructions}
+          </p>
+          <div className="new-registration-container">
+            <button 
+              type="button" 
+              onClick={startNewRegistration}
+              className="new-registration-btn"
+            >
+              ➕ Register Another Person
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!registrationSuccess && (
+        <form onSubmit={handleSubmit} className="registration-form">
         
         {/* Step 1: Basic Information */}
         {step === 1 && (
@@ -371,6 +433,7 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
           </div>
         )}
       </form>
+      )}
 
       <div className="registration-info">
         <h4>📅 Conference Information</h4>
