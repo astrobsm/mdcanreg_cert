@@ -21,8 +21,8 @@ const config = {
     TIMEOUT: 5000, // 5 seconds
   },
   production: {
-    // Use the same origin in production deployment
-    API_URL: window.location.origin,
+    // Backend is hosted on Digital Ocean
+    API_URL: 'https://mdcanbdm042-2025-tdlv8.ondigitalocean.app',
     DEBUG: false,
     TIMEOUT: 30000, // 30 seconds
   }
