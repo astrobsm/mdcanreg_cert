@@ -15,6 +15,7 @@ logging.basicConfig(
 
 # Log environment info (excluding sensitive data)
 logging.info("=== MDCAN BDM 2025 Application Starting ===")
+logging.info("Version: 2.0 with /api/register endpoint and database initialization")
 for key, value in os.environ.items():
     if not any(x in key.lower() for x in ['password', 'token', 'key', 'secret']):
         logging.info(f"ENV: {key}={value}")
