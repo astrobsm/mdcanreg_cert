@@ -22,8 +22,11 @@ for key, value in os.environ.items():
 
 # Import the full application with all features
 try:
-    logging.info("Loading full application with all features...")
-    from backend.minimal_app import app
+    logging.info("Loading full application with WhatsApp integration...")
+    # Import from root directory where our updated minimal_app.py with WhatsApp integration is located
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from minimal_app import app
     
     logging.info("✅ Full application loaded successfully")
     
