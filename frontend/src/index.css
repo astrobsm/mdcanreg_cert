@@ -697,6 +697,57 @@ button:disabled {
   margin-top: 2rem;
 }
 
+/* ===== ENHANCED REGISTRATION OPTIONS ===== */
+.registration-options {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.option-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.option-header h3 {
+  color: #007bff;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.option-header p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.option-link {
+  display: inline-block;
+  background: #007bff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.option-link:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: white;
+}
+
 .registration-summary {
   background: #f7fafc;
   padding: 1rem;
