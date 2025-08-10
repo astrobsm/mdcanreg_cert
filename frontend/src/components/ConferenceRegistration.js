@@ -175,6 +175,39 @@ const ConferenceRegistration = ({ onRegistrationSuccess }) => {
         </div>
       </div>
 
+      {/* Alternative Registration Option */}
+      <div className="alternative-registration">
+        <div className="registration-options">
+          <h3>📝 Registration Options</h3>
+          <p>Choose your preferred registration method:</p>
+          
+          <div className="option-buttons">
+            <div className="option-card active">
+              <div className="option-icon">🖥️</div>
+              <h4>Online Form</h4>
+              <p>Complete registration directly on this platform</p>
+              <span className="option-status">Current Selection</span>
+            </div>
+            
+            <div className="option-divider">OR</div>
+            
+            <div className="option-card">
+              <div className="option-icon">📋</div>
+              <h4>Google Forms</h4>
+              <p>Use our external Google Forms registration</p>
+              <a 
+                href="https://docs.google.com/forms/d/e/1FAIpQLSc-OiAeDWbgsi_Qru1V7vBZ9HUTJbzVzC9TmZehlmErzxT8KQ/viewform?usp=header"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="google-forms-btn"
+              >
+                🔗 Register via Google Forms
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {message && (
         <div className={`message ${message.includes('successful') ? 'success' : 'error'}`}>
           {message}
