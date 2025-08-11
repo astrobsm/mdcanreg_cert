@@ -23,10 +23,16 @@ for key, value in os.environ.items():
 # Import the full application with all features
 try:
     logging.info("Loading full application with WhatsApp integration...")
+    logging.info("Python path: %s", sys.path)
+    logging.info("Current working directory: %s", os.getcwd())
+    logging.info("Backend directory exists: %s", os.path.exists('backend'))
+    logging.info("Backend minimal_app.py exists: %s", os.path.exists('backend/minimal_app.py'))
+    
     # Import from backend directory where minimal_app.py is located
     from backend.minimal_app import app
     
     logging.info("✅ Full application loaded successfully")
+    logging.info("App routes available: %s", [rule.rule for rule in app.url_map.iter_rules()])
     
     # Add additional health check routes for Digital Ocean
     @app.route('/healthz')
