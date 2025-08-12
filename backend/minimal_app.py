@@ -1182,11 +1182,22 @@ def register_participant():
                 table_exists = result.fetchone()[0]
                 
                 if not table_exists:
+                    # Try to create the table automatically first
+                    try:
+                        db.create_all()
+                        # Check again after creation attempt
+                        result = connection.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participant')"))
+                        table_exists = result.fetchone()[0]
+                    except Exception as create_error:
+                        print(f"Auto table creation failed: {create_error}")
+                
+                if not table_exists:
                     return jsonify({
                         "status": "error",
-                        "message": "Database is not properly initialized. Please contact the administrator.",
+                        "message": "Database table is missing. Administrator needs to create the participant table manually.",
                         "error_code": "DB_TABLE_MISSING",
-                        "details": "The participant table does not exist in the database."
+                        "details": "Contact support to run the database setup SQL script.",
+                        "sql_needed": "CREATE TABLE participant (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, ...)"
                     }), 503
         except Exception as db_check_error:
             return jsonify({
