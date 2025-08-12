@@ -30,4 +30,4 @@ RUN if [ -d "/app/frontend/build" ]; then \
 EXPOSE 8080
 
 # Use environment variable for port binding
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 120 --log-level info app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --timeout 120 --log-level info digital_ocean_app:app"]

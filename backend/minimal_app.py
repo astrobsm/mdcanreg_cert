@@ -1616,6 +1616,23 @@ def catch_all_test():
         "FRONTEND_BUILD_FOLDER": FRONTEND_BUILD_FOLDER
     })
 
+# Handle static files from React build
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    """Serve static files from React build"""
+    try:
+        if static_folder:
+            static_path = os.path.join(static_folder, 'static', filename)
+            print(f"Serving static file: {filename} from {static_path}")
+            if os.path.exists(static_path):
+                return send_from_directory(os.path.join(static_folder, 'static'), filename)
+        
+        print(f"Static file not found: {filename}")
+        return jsonify({"error": "Static file not found", "file": filename}), 404
+    except Exception as e:
+        print(f"Error serving static file {filename}: {e}")
+        return jsonify({"error": "Error serving static file"}), 500
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
