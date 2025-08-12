@@ -1633,20 +1633,21 @@ def serve_static(filename):
         print(f"Error serving static file {filename}: {e}")
         return jsonify({"error": "Error serving static file"}), 500
 
+# Serve React frontend for non-API routes only
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    """Serve the React frontend"""
+    """Serve the React frontend - but skip API routes entirely"""
+    # Don't handle API routes at all - they should be handled by specific @app.route decorators
+    if path and path.startswith('api/'):
+        from flask import abort
+        abort(404)  # Let Flask continue to check other routes
+        
     try:
         print(f"=== SERVE_REACT DEBUG START ===")
         print(f"Route requested: '{path}'")
         print(f"static_folder: {static_folder}")
         print(f"FRONTEND_BUILD_FOLDER: {FRONTEND_BUILD_FOLDER}")
-        
-        # Handle API routes - return 404 if specific route not found
-        if path and path.startswith('api/'):
-            print(f"API route requested: {path} - route not found")
-            return jsonify({"error": "API endpoint not found", "path": path}), 404
         
         # Handle specific frontend files
         if path and '.' in path:
