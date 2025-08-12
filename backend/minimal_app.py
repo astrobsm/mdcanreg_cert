@@ -1175,6 +1175,27 @@ def create_participant():
 def register_participant():
     """Registration endpoint that handles multipart form data"""
     try:
+        # First check if the participant table exists
+        try:
+            with db.engine.connect() as connection:
+                result = connection.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participant')"))
+                table_exists = result.fetchone()[0]
+                
+                if not table_exists:
+                    return jsonify({
+                        "status": "error",
+                        "message": "Database is not properly initialized. Please contact the administrator.",
+                        "error_code": "DB_TABLE_MISSING",
+                        "details": "The participant table does not exist in the database."
+                    }), 503
+        except Exception as db_check_error:
+            return jsonify({
+                "status": "error",
+                "message": "Database connection failed. Please try again later.",
+                "error_code": "DB_CONNECTION_ERROR",
+                "details": str(db_check_error)
+            }), 503
+        
         # Handle multipart form data
         form_data = request.form
         files = request.files
