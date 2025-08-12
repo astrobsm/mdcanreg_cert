@@ -1196,21 +1196,36 @@ def register_participant():
                 "details": str(db_check_error)
             }), 503
         
-        # Handle multipart form data
-        form_data = request.form
-        files = request.files
-        
-        # Extract form data
-        name = form_data.get('name')
-        email = form_data.get('email')
-        phone = form_data.get('phone')
-        gender = form_data.get('gender')
-        specialty = form_data.get('specialty')
-        state = form_data.get('state')
-        hospital = form_data.get('hospital')
-        cert_type = form_data.get('cert_type', 'participation')
-        role = form_data.get('role', 'Attendee')
-        registration_fee_paid = form_data.get('registration_fee_paid', 'false').lower() == 'true'
+        # Handle both form data and JSON data
+        if request.is_json:
+            # Handle JSON data
+            data = request.get_json()
+            name = data.get('name')
+            email = data.get('email')
+            phone = data.get('phone')
+            gender = data.get('gender')
+            specialty = data.get('specialty')
+            state = data.get('state')
+            hospital = data.get('hospital')
+            cert_type = data.get('cert_type', 'participation')
+            role = data.get('role', 'Attendee')
+            registration_fee_paid = data.get('registration_fee_paid', False)
+            files = {}  # No files in JSON requests
+        else:
+            # Handle multipart form data
+            form_data = request.form
+            files = request.files
+            
+            name = form_data.get('name')
+            email = form_data.get('email')
+            phone = form_data.get('phone')
+            gender = form_data.get('gender')
+            specialty = form_data.get('specialty')
+            state = form_data.get('state')
+            hospital = form_data.get('hospital')
+            cert_type = form_data.get('cert_type', 'participation')
+            role = form_data.get('role', 'Attendee')
+            registration_fee_paid = form_data.get('registration_fee_paid', 'false').lower() == 'true'
         
         # Validate required fields
         if not name or not email:
