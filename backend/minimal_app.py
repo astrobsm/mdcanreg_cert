@@ -1175,38 +1175,6 @@ def create_participant():
 def register_participant():
     """Registration endpoint that handles multipart form data"""
     try:
-        # First check if the participant table exists
-        try:
-            with db.engine.connect() as connection:
-                result = connection.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participant')"))
-                table_exists = result.fetchone()[0]
-                
-                if not table_exists:
-                    # Try to create the table automatically first
-                    try:
-                        db.create_all()
-                        # Check again after creation attempt
-                        result = connection.execute(sa.text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'participant')"))
-                        table_exists = result.fetchone()[0]
-                    except Exception as create_error:
-                        print(f"Auto table creation failed: {create_error}")
-                
-                if not table_exists:
-                    return jsonify({
-                        "status": "error",
-                        "message": "Database table is missing. Administrator needs to create the participant table manually.",
-                        "error_code": "DB_TABLE_MISSING",
-                        "details": "Contact support to run the database setup SQL script.",
-                        "sql_needed": "CREATE TABLE participant (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL, ...)"
-                    }), 503
-        except Exception as db_check_error:
-            return jsonify({
-                "status": "error",
-                "message": "Database connection failed. Please try again later.",
-                "error_code": "DB_CONNECTION_ERROR",
-                "details": str(db_check_error)
-            }), 503
-        
         # Handle both form data and JSON data
         if request.is_json:
             # Handle JSON data
@@ -1245,71 +1213,86 @@ def register_participant():
                 "message": "Name and email are required"
             }), 400
         
-        # Check if email already exists
-        existing_participant = Participant.query.filter_by(email=email).first()
-        if existing_participant:
-            return jsonify({
-                "status": "error",
-                "message": "Email already registered. Please use a different email."
-            }), 400
-        
         # Generate unique identifiers
+        import uuid
         registration_number = f"MDCAN-{uuid.uuid4().hex[:8].upper()}"
         certificate_id = f"CERT-{uuid.uuid4().hex[:12].upper()}"
         
-        # Handle file upload (evidence of payment)
-        evidence_file = None
-        if 'evidence_of_payment' in files:
-            evidence_file = files['evidence_of_payment']
-            if evidence_file.filename:
-                # Create uploads directory if it doesn't exist
-                upload_dir = os.path.join('backend', 'uploads')
-                if not os.path.exists(upload_dir):
-                    os.makedirs(upload_dir)
-                
-                # Save file with unique name
-                filename = f"{registration_number}_{evidence_file.filename}"
-                file_path = os.path.join(upload_dir, filename)
-                evidence_file.save(file_path)
-        
-        # Create new participant
-        new_participant = Participant(
-            name=name,
-            email=email,
-            phone=phone,
-            gender=gender,
-            specialty=specialty,
-            state=state,
-            hospital=hospital,
-            role=role,
-            cert_type=cert_type,
-            registration_number=registration_number,
-            certificate_id=certificate_id,
-            registration_status='Pending' if not registration_fee_paid else 'Confirmed',
-            registration_fee_paid=registration_fee_paid
-        )
-        
-        db.session.add(new_participant)
-        db.session.commit()
-        
-        return jsonify({
-            "status": "success",
-            "message": "Registration successful! Welcome to MDCAN BDM 2025.",
-            "participant": new_participant.to_dict(),
-            "registration_number": registration_number,
-            "certificate_id": certificate_id,
-            "whatsapp_group": {
-                "message": "Join the MDCAN BDM 2025 Conference WhatsApp group to stay updated!",
-                "link": "https://chat.whatsapp.com/E0JkGqBhM362Z2fwHyiv8k",
-                "instructions": "Click the link above to join the conference WhatsApp group for important updates, networking, and real-time conference information."
-            }
-        }), 201
-        
+        # Try to create and save participant directly
+        try:
+            # Check if email already exists first
+            existing_participant = Participant.query.filter_by(email=email).first()
+            if existing_participant:
+                return jsonify({
+                    "status": "error",
+                    "message": "Email already registered. Please use a different email."
+                }), 400
+            
+            # Create new participant
+            new_participant = Participant(
+                name=name,
+                email=email,
+                phone=phone,
+                gender=gender,
+                specialty=specialty,
+                state=state,
+                hospital=hospital,
+                role=role,
+                cert_type=cert_type,
+                registration_number=registration_number,
+                certificate_id=certificate_id,
+                registration_status='Pending' if not registration_fee_paid else 'Confirmed',
+                registration_fee_paid=registration_fee_paid
+            )
+            
+            db.session.add(new_participant)
+            db.session.commit()
+            
+            return jsonify({
+                "status": "success",
+                "message": "Registration successful! Welcome to MDCAN BDM 2025.",
+                "participant": new_participant.to_dict(),
+                "registration_number": registration_number,
+                "certificate_id": certificate_id,
+                "whatsapp_group": {
+                    "message": "Join the MDCAN BDM 2025 Conference WhatsApp group to stay updated!",
+                    "link": "https://chat.whatsapp.com/E0JkGqBhM362Z2fwHyiv8k",
+                    "instructions": "Click the link above to join the conference WhatsApp group for important updates, networking, and real-time conference information."
+                }
+            }), 201
+            
+        except Exception as db_error:
+            db.session.rollback()
+            
+            # Check if it's a table missing error
+            error_str = str(db_error).lower()
+            if 'relation "participant" does not exist' in error_str or 'table' in error_str:
+                return jsonify({
+                    "status": "error",
+                    "message": "Database setup incomplete. Please contact administrator.",
+                    "error_code": "DB_TABLE_MISSING",
+                    "details": "The participant table needs to be created."
+                }), 503
+            elif 'authentication' in error_str or 'password' in error_str:
+                return jsonify({
+                    "status": "error", 
+                    "message": "Database connection issue. Please try again later.",
+                    "error_code": "DB_AUTH_ERROR",
+                    "details": "Database authentication needs to be configured."
+                }), 503
+            else:
+                return jsonify({
+                    "status": "error",
+                    "message": f"Registration failed: {str(db_error)}",
+                    "error_code": "DB_ERROR"
+                }), 500
+
     except Exception as e:
-        db.session.rollback()
         return jsonify({
             "status": "error", 
-            "message": f"Registration failed: {str(e)}"
+            "message": "An unexpected error occurred during registration.",
+            "error_code": "GENERAL_ERROR",
+            "details": str(e)
         }), 500
 
 @app.route('/api/participants/<int:id>', methods=['GET'])
