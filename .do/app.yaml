@@ -4,7 +4,7 @@ region: fra1
 databases:
 - cluster_name: astrobsmvelvet-db
   db_name: defaultdb
-  db_user: mdcanconfreg
+  db_user: mdcanbdmreg
   engine: PG
   name: astrobsmvelvet-db
   production: true
