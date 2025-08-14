@@ -13,7 +13,7 @@ databases:
 envs:
 - key: DATABASE_URL
   scope: RUN_TIME
-  value: ${astrobsmvelvet-db.DATABASE_URL}
+  value: postgresql://mdcanconfreg:MDCAN2025SecurePass%21@astrobsmvelvet-db-do-user-23752526-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require
 - key: EMAIL_HOST
   scope: RUN_AND_BUILD_TIME
   value: smtp.gmail.com
