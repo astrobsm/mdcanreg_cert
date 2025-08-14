@@ -4,9 +4,25 @@ WORKDIR /app
 
 # Install system dependencies for PDF generation and PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wkhtmltopdf \
+    wget \
+    xvfb \
     libpq-dev \
     gcc \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxtst6 \
+    libxi6 \
+    fontconfig \
+    libfontconfig1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install wkhtmltopdf from the official source
+RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
+    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || true \
+    && apt-get update && apt-get install -f -y \
+    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
