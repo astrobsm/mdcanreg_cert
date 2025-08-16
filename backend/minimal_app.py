@@ -101,13 +101,18 @@ engine_options = {
 if 'postgresql://' in DATABASE_URL:
     engine_options['connect_args']['sslmode'] = 'require'
     
-    # Add CA certificate path if available
+    # For Digital Ocean managed PostgreSQL, sslmode=require is usually sufficient
+    # CA certificate is optional and may not be needed
     ca_cert_path = os.path.join(os.path.dirname(__file__), 'ca-certificate.crt')
-    if os.path.exists(ca_cert_path):
+    
+    # Only add CA certificate if explicitly needed (can be disabled by environment variable)
+    use_ca_cert = os.environ.get('USE_SSL_CA_CERT', 'false').lower() == 'true'
+    
+    if use_ca_cert and os.path.exists(ca_cert_path):
         engine_options['connect_args']['sslrootcert'] = ca_cert_path
         print(f"Using SSL CA certificate: {ca_cert_path}")
     else:
-        print("CA certificate not found, using sslmode=require without certificate")
+        print("Using SSL without CA certificate file (Digital Ocean managed SSL)")
     
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
