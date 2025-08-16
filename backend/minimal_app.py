@@ -86,10 +86,30 @@ if DATABASE_URL.startswith('postgres://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+
+# Enhanced SSL configuration for production database
+engine_options = {
     'pool_pre_ping': True,
-    'pool_recycle': 300
+    'pool_recycle': 300,
+    'connect_args': {
+        'connect_timeout': 10,
+        'application_name': 'MDCAN_BDM_2025'
+    }
 }
+
+# Add SSL configuration if using PostgreSQL
+if 'postgresql://' in DATABASE_URL:
+    engine_options['connect_args']['sslmode'] = 'require'
+    
+    # Add CA certificate path if available
+    ca_cert_path = os.path.join(os.path.dirname(__file__), 'ca-certificate.crt')
+    if os.path.exists(ca_cert_path):
+        engine_options['connect_args']['sslrootcert'] = ca_cert_path
+        print(f"Using SSL CA certificate: {ca_cert_path}")
+    else:
+        print("CA certificate not found, using sslmode=require without certificate")
+    
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 # Initialize database
 db = SQLAlchemy(app)
@@ -741,6 +761,65 @@ def db_test():
             "message": f"Database connection failed: {str(e)}",
             "traceback": traceback.format_exc(),
             "database_url_configured": bool(os.environ.get('DATABASE_URL'))
+        }), 500
+
+@app.route('/api/ssl-test')
+def ssl_test():
+    """Test SSL database connection and configuration"""
+    try:
+        # Get database URL
+        database_url = os.environ.get('DATABASE_URL', '')
+        is_postgres = 'postgresql://' in database_url
+        
+        if not is_postgres:
+            return jsonify({
+                "status": "info",
+                "message": "SSL test not applicable - not using PostgreSQL",
+                "database_type": "SQLite or other",
+                "ssl_required": False
+            })
+        
+        # Test SSL connection
+        with db.engine.connect() as connection:
+            # Get SSL status
+            try:
+                ssl_result = connection.execute(sa.text("SELECT ssl_is_used()")).fetchone()
+                ssl_active = ssl_result[0] if ssl_result else False
+            except:
+                ssl_active = "Unknown"
+            
+            # Get connection info
+            try:
+                version_result = connection.execute(sa.text("SELECT version()")).fetchone()
+                db_version = version_result[0] if version_result else "Unknown"
+            except:
+                db_version = "Unknown"
+            
+            # Get current user
+            try:
+                user_result = connection.execute(sa.text("SELECT current_user")).fetchone()
+                current_user = user_result[0] if user_result else "Unknown"
+            except:
+                current_user = "Unknown"
+        
+        return jsonify({
+            "status": "success",
+            "message": "SSL connection test completed",
+            "ssl_active": ssl_active,
+            "database_version": db_version,
+            "current_user": current_user,
+            "sslmode_in_url": "sslmode=require" in database_url,
+            "ssl_configured": bool(app.config['SQLALCHEMY_ENGINE_OPTIONS'].get('connect_args', {}).get('sslmode')),
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": f"SSL test failed: {str(e)}",
+            "traceback": traceback.format_exc(),
+            "timestamp": datetime.utcnow().isoformat()
         }), 500
 
 @app.route('/api/table-test')
