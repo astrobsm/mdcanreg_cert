@@ -463,8 +463,12 @@ def test_simple():
 
 @app.route('/api/health')
 def health():
-    """Health check endpoint"""
-    return jsonify({"status": "ok"})
+    """Health check endpoint with deployment timestamp"""
+    return jsonify({
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat(),
+        "deployment": "SSL_CA_CONFIGURED_v2"
+    })
 
 @app.route('/health')
 def health_check():
