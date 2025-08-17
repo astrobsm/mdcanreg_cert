@@ -8,9 +8,33 @@ echo "========================================="
 echo "📋 Environment Variables Check:"
 echo "  PORT: ${PORT:-NOT SET}"
 echo "  FLASK_ENV: ${FLASK_ENV:-NOT SET}"
-echo "  DATABASE_URL: ${DATABASE_URL:0:30}..."
-echo "  ADMIN_PASSWORD: ${ADMIN_PASSWORD:+CONFIGURED}"
+if [ -n "${DATABASE_URL}" ]; then
+    echo "  DATABASE_URL: ${DATABASE_URL:0:30}... (configured)"
+else
+    echo "  DATABASE_URL: NOT SET"
+fi
+if [ -n "${ADMIN_PASSWORD}" ]; then
+    echo "  ADMIN_PASSWORD: CONFIGURED"
+else
+    echo "  ADMIN_PASSWORD: NOT SET"
+fi
 echo "  EMAIL_HOST: ${EMAIL_HOST:-NOT SET}"
+
+# Verify critical environment variables
+missing_vars=""
+if [ -z "${DATABASE_URL}" ]; then
+    missing_vars="${missing_vars} DATABASE_URL"
+fi
+if [ -z "${ADMIN_PASSWORD}" ]; then
+    missing_vars="${missing_vars} ADMIN_PASSWORD"
+fi
+
+if [ -n "${missing_vars}" ]; then
+    echo "❌ Missing critical environment variables:${missing_vars}"
+    echo "Application may fail to start properly"
+else
+    echo "✅ All critical environment variables are set"
+fi
 
 # Check Python dependencies
 echo ""

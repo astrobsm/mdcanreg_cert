@@ -23,21 +23,30 @@ from werkzeug.utils import secure_filename
 from jinja2 import Template
 from threading import Thread
 
-# Load environment variables from .env file
+# Load environment variables - prioritize container environment over .env files
 try:
     from dotenv import load_dotenv
-    # Load from parent directory (where .env is located)
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
-    if os.path.exists(env_path):
-        load_dotenv(env_path)
-        print(f"✅ Environment variables loaded from {env_path}")
+    
+    # In production (Docker), don't load .env files as variables come from container
+    if os.environ.get('FLASK_ENV') == 'production':
+        print("🐳 Production environment detected - using container environment variables")
+        print(f"  - PORT: {os.environ.get('PORT', 'not set')}")
+        print(f"  - DATABASE_URL: {'configured' if os.environ.get('DATABASE_URL') else 'not configured'}")
+        print(f"  - ADMIN_PASSWORD: {'configured' if os.environ.get('ADMIN_PASSWORD') else 'not configured'}")
     else:
-        load_dotenv()  # Load from current directory
-        print("✅ Environment variables loaded from .env file")
+        # Development environment - try to load .env file
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+        if os.path.exists(env_path):
+            load_dotenv(env_path)
+            print(f"✅ Development - Environment variables loaded from {env_path}")
+        else:
+            load_dotenv()  # Load from current directory
+            print("✅ Development - Environment variables loaded from .env file")
+            
 except ImportError:
     print("⚠️ python-dotenv not installed, using system environment variables only")
 except Exception as e:
-    print(f"⚠️ Failed to load .env file: {e}")
+    print(f"⚠️ Failed to load .env file: {e} - using system environment variables")
 
 # Optional dependencies with graceful fallback
 try:

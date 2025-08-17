@@ -1,0 +1,101 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install essential system dependencies and runtime libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    libpq5 \
+    gcc \
+    curl \
+    wget \
+    python3-dev \
+    build-essential \
+    pkg-config \
+    # Runtime libraries for Python packages
+    libc6-dev \
+    libssl-dev \
+    libffi-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Handle wkhtmltopdf properly - either install or disable cleanly
+RUN echo "🔧 Configuring PDF generation..." && \
+    # Option 1: Try to install wkhtmltopdf properly
+    (apt-get update && \
+     apt-get install -y --no-install-recommends \
+        xfonts-75dpi \
+        xfonts-base \
+        fontconfig \
+        libjpeg62-turbo \
+        libxrender1 \
+        xvfb && \
+     wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb && \
+     # Try to install with force-depends to handle version conflicts
+     dpkg --force-depends -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb && \
+     apt-get install -f -y && \
+     rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb && \
+     echo "✅ wkhtmltopdf installed successfully") || \
+    # Option 2: If installation fails, create a proper stub
+    (echo "⚠️ wkhtmltopdf installation failed, creating stub..." && \
+     echo '#!/bin/bash' > /usr/local/bin/wkhtmltopdf && \
+     echo 'echo "PDF generation disabled in this container"' >> /usr/local/bin/wkhtmltopdf && \
+     echo 'exit 1' >> /usr/local/bin/wkhtmltopdf && \
+     chmod +x /usr/local/bin/wkhtmltopdf) && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies with proper binary handling
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    # Install dependencies with explicit binary compilation for problematic packages
+    pip install --no-cache-dir --no-binary=psycopg2-binary -r requirements.txt && \
+    # Verify critical dependencies after installation
+    echo "📦 Dependencies installed successfully" && \
+    python -c "import sys; import flask; import flask_sqlalchemy; import psycopg2; import gunicorn; print('✅ Critical dependencies verified:'); print(f'  - Flask: {flask.__version__}'); print(f'  - psycopg2: {psycopg2.__version__}'); print(f'  - Python: {sys.version.split()[0]}')"
+
+# Copy application files
+COPY . .
+
+# Make startup script executable
+RUN chmod +x startup_check.sh
+
+# Set Python environment with explicit environment variables
+ENV PYTHONPATH="/app:/app/backend"
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
+ENV PORT=8080
+
+# Ensure python-dotenv doesn't interfere with container environment
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Add debug logging for environment variables during build
+RUN echo "🔧 Environment Configuration Check:" && \
+    echo "  - PYTHONPATH: ${PYTHONPATH}" && \
+    echo "  - PORT: ${PORT}" && \
+    echo "  - FLASK_ENV: ${FLASK_ENV}" && \
+    echo "  - Build completed successfully"
+
+# Ensure frontend build exists with proper structure
+RUN mkdir -p frontend/build/static && \
+    echo '<!DOCTYPE html>' > frontend/build/index.html && \
+    echo '<html lang="en">' >> frontend/build/index.html && \
+    echo '<head>' >> frontend/build/index.html && \
+    echo '  <meta charset="utf-8">' >> frontend/build/index.html && \
+    echo '  <meta name="viewport" content="width=device-width,initial-scale=1">' >> frontend/build/index.html && \
+    echo '  <title>MDCAN BDM 2025 Certificate Platform</title>' >> frontend/build/index.html && \
+    echo '  <style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;}</style>' >> frontend/build/index.html && \
+    echo '</head>' >> frontend/build/index.html && \
+    echo '<body>' >> frontend/build/index.html && \
+    echo '  <h1>MDCAN BDM 2025 Certificate Platform</h1>' >> frontend/build/index.html && \
+    echo '  <p>Application is loading...</p>' >> frontend/build/index.html && \
+    echo '  <p><a href="/admin">Admin Portal</a> | <a href="/api/health">Health Check</a></p>' >> frontend/build/index.html && \
+    echo '</body>' >> frontend/build/index.html && \
+    echo '</html>' >> frontend/build/index.html && \
+    echo "Frontend build directory created with index.html"
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=5 \
+    CMD curl -f http://localhost:${PORT:-8080}/health || curl -f http://127.0.0.1:${PORT:-8080}/health || exit 1
+
+CMD ["sh", "-c", "./startup_check.sh && echo '🚀 MDCAN BDM 2025 - STARTING APPLICATION' && echo 'Binding: 0.0.0.0:'${PORT:-8080} && echo 'Environment: production' && echo 'DATABASE_URL:' ${DATABASE_URL:0:30}... && echo 'Starting gunicorn...' && exec gunicorn --config gunicorn.conf.py wsgi:application"]
