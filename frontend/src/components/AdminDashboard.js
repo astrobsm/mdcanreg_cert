@@ -116,7 +116,7 @@ const AdminDashboard = ({ stats, onRefresh }) => {
               </div>
             </div>
             
-            ${response.data.feedback.top_rated_sessions.length > 0 ? `
+            ${(response.data.feedback.top_rated_sessions || []).length > 0 ? `
               <div class="summary-section">
                 <h2>Top Rated Sessions</h2>
                 <table>
@@ -128,7 +128,7 @@ const AdminDashboard = ({ stats, onRefresh }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    ${response.data.feedback.top_rated_sessions.map(session => `
+                    ${(response.data.feedback.top_rated_sessions || []).map(session => `
                       <tr>
                         <td>${session.title}</td>
                         <td>${session.average_rating.toFixed(1)} ⭐</td>

@@ -148,7 +148,8 @@ const ProgramSchedule = ({ currentUser, isAdmin, programs, onProgramAdded, onRef
 
   const groupProgramsByDate = (programs) => {
     const grouped = {};
-    programs.forEach(program => {
+    const programsArray = Array.isArray(programs) ? programs : [];
+    programsArray.forEach(program => {
       const date = new Date(program.start_time).toDateString();
       if (!grouped[date]) {
         grouped[date] = [];
@@ -451,7 +452,7 @@ const ProgramSchedule = ({ currentUser, isAdmin, programs, onProgramAdded, onRef
                 </h3>
                 
                 <div className="programs-list">
-                  {groupedPrograms[date].map(program => (
+                  {(groupedPrograms[date] || []).map(program => (
                     <div key={program.id} className={`program-card ${program.status}`}>
                       <div className="program-header">
                         <div className="program-meta">

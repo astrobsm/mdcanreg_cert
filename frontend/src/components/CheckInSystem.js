@@ -25,13 +25,14 @@ const CheckInSystem = () => {
 
   // Filter participants based on search term
   useEffect(() => {
+    const participantsArray = Array.isArray(participants) ? participants : [];
     if (searchTerm.trim() === '') {
-      setFilteredParticipants(participants);
+      setFilteredParticipants(participantsArray);
     } else {
-      const filtered = participants.filter(
+      const filtered = participantsArray.filter(
         (participant) =>
-          participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          participant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          participant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          participant.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (participant.certificate_number && 
             participant.certificate_number.toLowerCase().includes(searchTerm.toLowerCase()))
       );
@@ -43,8 +44,9 @@ const CheckInSystem = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/participants');
-      setParticipants(response.data);
-      setFilteredParticipants(response.data);
+      const participantsData = Array.isArray(response.data) ? response.data : [];
+      setParticipants(participantsData);
+      setFilteredParticipants(participantsData);
       setLoading(false);
     } catch (err) {
       setError('Failed to load participants. Please try again.');
@@ -56,12 +58,13 @@ const CheckInSystem = () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/check-ins/day/${conferenceDay}`);
-      setCheckedInParticipants(response.data);
+      const checkedInData = Array.isArray(response.data) ? response.data : [];
+      setCheckedInParticipants(checkedInData);
       
       // Calculate stats
       if (participants.length > 0) {
-        const checkedInCount = response.data.length;
-        const materialsProvidedCount = response.data.filter(c => c.materials_received).length;
+        const checkedInCount = checkedInData.length;
+        const materialsProvidedCount = checkedInData.filter(c => c.materials_received).length;
         const percentCheckedIn = Math.round((checkedInCount / participants.length) * 100);
         
         setStats({
@@ -138,11 +141,13 @@ const CheckInSystem = () => {
   };
 
   const isCheckedIn = (participantId) => {
-    return checkedInParticipants.some(checkin => checkin.participant_id === participantId);
+    const checkedInArray = Array.isArray(checkedInParticipants) ? checkedInParticipants : [];
+    return checkedInArray.some(checkin => checkin.participant_id === participantId);
   };
 
   const getCheckInDetails = (participantId) => {
-    return checkedInParticipants.find(checkin => checkin.participant_id === participantId);
+    const checkedInArray = Array.isArray(checkedInParticipants) ? checkedInParticipants : [];
+    return checkedInArray.find(checkin => checkin.participant_id === participantId);
   };
 
   const handleConferenceDayChange = (e) => {
@@ -236,7 +241,7 @@ const CheckInSystem = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredParticipants.map((participant) => {
+              {(Array.isArray(filteredParticipants) ? filteredParticipants : []).map((participant) => {
                 const checkedIn = isCheckedIn(participant.id);
                 const checkInDetails = checkedIn ? getCheckInDetails(participant.id) : null;
                 

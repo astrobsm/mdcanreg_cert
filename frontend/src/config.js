@@ -10,13 +10,13 @@ const isDocker = process.env.REACT_APP_DOCKER === 'true';
 
 const config = {
   development: {
-    // If running in Docker, backend is at 'backend' host, otherwise localhost
-    API_URL: isDocker ? 'http://backend:5000' : 'http://localhost:5000',
+    // If running in Docker, backend is at 'backend' host, otherwise localhost:8080
+    API_URL: isDocker ? 'http://backend:8080' : 'http://localhost:8080',
     DEBUG: true,
     TIMEOUT: 10000, // 10 seconds
   },
   test: {
-    API_URL: 'http://localhost:5000',
+    API_URL: 'http://localhost:8080',
     DEBUG: true,
     TIMEOUT: 5000, // 5 seconds
   },

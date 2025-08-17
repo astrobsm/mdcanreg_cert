@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const AttendanceManagement = ({ programs, participants, onAttendanceUpdate }) => {
+const AttendanceManagement = ({ programs = [], participants = [], onAttendanceUpdate }) => {
+  // Ensure participants and programs are always arrays
+  const participantsList = Array.isArray(participants) ? participants : [];
+  const programsList = Array.isArray(programs) ? programs : [];
+  
   const [selectedProgram, setSelectedProgram] = useState('');
   const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(false);
@@ -21,7 +25,7 @@ const AttendanceManagement = ({ programs, participants, onAttendanceUpdate }) =>
 
   const initializeAttendanceData = () => {
     const initialData = {};
-    participants.forEach(participant => {
+    participantsList.forEach(participant => {
       initialData[participant.id] = 'attended'; // Default to attended
     });
     setAttendanceData(initialData);
@@ -82,10 +86,10 @@ const AttendanceManagement = ({ programs, participants, onAttendanceUpdate }) =>
       return;
     }
 
-    const selectedProgramData = programs.find(p => p.id.toString() === selectedProgram);
+    const selectedProgramData = programsList.find(p => p.id.toString() === selectedProgram);
     const csvData = [
       ['Name', 'Email', 'Organization', 'Registration Type', 'Attendance Status'],
-      ...participants.map(participant => [
+      ...participantsList.map(participant => [
         participant.name,
         participant.email,
         participant.organization || '',
@@ -111,10 +115,10 @@ const AttendanceManagement = ({ programs, participants, onAttendanceUpdate }) =>
   };
 
   const getFilteredParticipants = () => {
-    return participants.filter(participant => {
-      const matchesSearch = participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           participant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (participant.organization && participant.organization.toLowerCase().includes(searchTerm.toLowerCase()));
+    return participantsList.filter(participant => {
+      const matchesSearch = (participant.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (participant.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (participant.organization || participant.institution || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesFilter = filterStatus === 'all' || 
                            participant.registration_status === filterStatus ||
@@ -174,7 +178,7 @@ const AttendanceManagement = ({ programs, participants, onAttendanceUpdate }) =>
               className="program-selector"
             >
               <option value="">-- Select a Program --</option>
-              {programs.map(program => (
+              {programsList.map(program => (
                 <option key={program.id} value={program.id}>
                   {program.title} - {formatDateTime(program.start_time)}
                   {program.venue && ` (${program.venue})`}
@@ -186,7 +190,7 @@ const AttendanceManagement = ({ programs, participants, onAttendanceUpdate }) =>
           {selectedProgram && (
             <div className="program-info">
               {(() => {
-                const program = programs.find(p => p.id.toString() === selectedProgram);
+                const program = programsList.find(p => p.id.toString() === selectedProgram);
                 return program ? (
                   <div className="info-card">
                     <h4>{program.title}</h4>

@@ -24,7 +24,8 @@ const AnnouncementManagement = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/announcements');
-      setAnnouncements(response.data);
+      const announcementsData = Array.isArray(response.data) ? response.data : [];
+      setAnnouncements(announcementsData);
       setLoading(false);
     } catch (err) {
       setError('Failed to load announcements. Please try again.');

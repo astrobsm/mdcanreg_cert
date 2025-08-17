@@ -23,15 +23,54 @@ from werkzeug.utils import secure_filename
 from jinja2 import Template
 from threading import Thread
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    # Load from parent directory (where .env is located)
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        print(f"✅ Environment variables loaded from {env_path}")
+    else:
+        load_dotenv()  # Load from current directory
+        print("✅ Environment variables loaded from .env file")
+except ImportError:
+    print("⚠️ python-dotenv not installed, using system environment variables only")
+except Exception as e:
+    print(f"⚠️ Failed to load .env file: {e}")
+
 # Optional dependencies with graceful fallback
 try:
     import pdfkit
-    PDF_GENERATION_AVAILABLE = True
-    print("✅ PDF generation available (pdfkit imported successfully)")
+    
+    # Configure wkhtmltopdf path for Windows
+    WKHTMLTOPDF_PATH = r'C:\Users\USER\Documents\html2pdf\wkhtmltox\bin\wkhtmltopdf.exe'
+    
+    # Test if the wkhtmltopdf executable exists
+    import os
+    if os.path.exists(WKHTMLTOPDF_PATH):
+        # Configure pdfkit to use the specific path
+        config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+        PDF_CONFIG = config
+        PDF_GENERATION_AVAILABLE = True
+        print(f"✅ PDF generation available with wkhtmltopdf at: {WKHTMLTOPDF_PATH}")
+    else:
+        # Try default path (in case it's in PATH)
+        try:
+            config = pdfkit.configuration()
+            PDF_CONFIG = config
+            PDF_GENERATION_AVAILABLE = True
+            print("✅ PDF generation available (using default wkhtmltopdf from PATH)")
+        except Exception as e:
+            PDF_CONFIG = None
+            PDF_GENERATION_AVAILABLE = False
+            print(f"⚠️  wkhtmltopdf not found at {WKHTMLTOPDF_PATH} or in PATH: {e}")
+            
 except ImportError as e:
     print(f"⚠️  PDF generation not available: {e}")
     print("   Continuing without PDF generation capability...")
     pdfkit = None
+    PDF_CONFIG = None
     PDF_GENERATION_AVAILABLE = False
 
 # Initialize Flask app
@@ -298,6 +337,9 @@ PARTICIPATION_CERTIFICATE_TEMPLATE = """
         }
         .signature img {
             max-height: 60px;
+            mix-blend-mode: multiply;
+            background: transparent;
+            filter: contrast(1.2) brightness(0.9);
         }
         .signature-name {
             font-weight: bold;
@@ -411,6 +453,9 @@ SERVICE_CERTIFICATE_TEMPLATE = """
         }
         .signature img {
             max-height: 60px;
+            mix-blend-mode: multiply;
+            background: transparent;
+            filter: contrast(1.2) brightness(0.9);
         }
         .signature-name {
             font-weight: bold;
@@ -1238,7 +1283,7 @@ def generate_certificate(participant_id):
                     "available_features": ["registration", "admin_portal", "database"]
                 }), 503
                 
-            pdf = pdfkit.from_string(html, False)
+            pdf = pdfkit.from_string(html, False, configuration=PDF_CONFIG)
         except Exception as e:
             # For environments where wkhtmltopdf might not be available
             return jsonify({
@@ -1516,13 +1561,71 @@ def get_participant_dashboard(email):
 @app.route('/api/send-certificate/<int:participant_id>', methods=['POST'])
 def send_certificate(participant_id):
     try:
-        participant = Participant.query.get(participant_id)
+        print(f"[CERTIFICATE] Starting certificate send for participant ID: {participant_id}")
+        
+        # Use session.get() instead of deprecated query.get()
+        participant = db.session.get(Participant, participant_id)
         if not participant:
+            print(f"[CERTIFICATE] Participant not found with ID: {participant_id}")
             return jsonify({
                 "status": "error",
                 "message": "Participant not found"
             }), 404
             
+        print(f"[CERTIFICATE] Found participant: {participant.name} ({participant.email})")
+        
+        # Check certificate sending schedule
+        now = datetime.now()
+        current_date = now.date()
+        current_time = now.time()
+        
+        # Allow sending today (August 17, 2025) anytime
+        today_allowed = datetime(2025, 8, 17).date()
+        
+        # Allow sending from September 5, 2025 at 5:00 PM onwards
+        conference_start = datetime(2025, 9, 5, 17, 0, 0)  # September 5, 2025 at 5:00 PM
+        
+        sending_allowed = False
+        restriction_message = ""
+        
+        if current_date == today_allowed:
+            # Today is allowed anytime
+            sending_allowed = True
+            print(f"[CERTIFICATE] Sending allowed - Today ({current_date}) is the testing day")
+        elif now >= conference_start:
+            # After conference start time
+            sending_allowed = True
+            print(f"[CERTIFICATE] Sending allowed - Conference period active since {conference_start}")
+        else:
+            # Not allowed yet
+            sending_allowed = False
+            restriction_message = f"Certificate sending will be available from September 5, 2025 at 5:00 PM. Current time: {now.strftime('%B %d, %Y at %I:%M %p')}"
+            print(f"[CERTIFICATE] Sending restricted - {restriction_message}")
+        
+        if not sending_allowed:
+            return jsonify({
+                "status": "error",
+                "message": "Certificate sending is not available at this time",
+                "details": restriction_message,
+                "available_from": "September 5, 2025 at 5:00 PM"
+            }), 403
+        
+        # Check email configuration first
+        if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD]):
+            print("[CERTIFICATE] Email configuration incomplete")
+            return jsonify({
+                "status": "error",
+                "message": "Email configuration is incomplete. Cannot send certificate.",
+                "details": "Please configure EMAIL_HOST, EMAIL_USER, and EMAIL_PASSWORD environment variables.",
+                "participant": {
+                    "name": participant.name,
+                    "email": participant.email,
+                    "certificate_id": participant.certificate_id
+                }
+            }), 503
+            
+        print(f"[CERTIFICATE] Generating certificate for: {participant.name}")
+        
         # Generate certificate PDF first
         if participant.cert_type == 'service':
             html = render_template_string(
@@ -1549,6 +1652,7 @@ def send_certificate(participant_id):
         # Generate PDF
         try:
             if not PDF_GENERATION_AVAILABLE:
+                print("[CERTIFICATE] PDF generation not available")
                 return jsonify({
                     "status": "error",
                     "message": "PDF generation not available in this deployment. System packages may be missing.",
@@ -1556,8 +1660,11 @@ def send_certificate(participant_id):
                     "available_features": ["registration", "admin_portal", "database"]
                 }), 503
                 
-            pdf = pdfkit.from_string(html, False)
+            print("[CERTIFICATE] Generating PDF with pdfkit...")
+            pdf = pdfkit.from_string(html, False, configuration=PDF_CONFIG)
+            print(f"[CERTIFICATE] PDF generated successfully, size: {len(pdf)} bytes")
         except Exception as e:
+            print(f"[CERTIFICATE] PDF generation error: {str(e)}")
             return jsonify({
                 "status": "error",
                 "message": f"Error generating PDF: {str(e)}",
@@ -1568,8 +1675,9 @@ def send_certificate(participant_id):
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
         temp_file.write(pdf)
         temp_file.close()
+        print(f"[CERTIFICATE] PDF saved to temporary file: {temp_file.name}")
         
-        # Check if email configuration is available
+        # Check if email configuration is available (already checked above, but for safety)
         if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD]):
             os.unlink(temp_file.name)
             return jsonify({
@@ -1617,44 +1725,53 @@ def send_certificate(participant_id):
         # Send email in a separate thread to avoid blocking
         def send_email_task():
             try:
+                print(f"[EMAIL] Starting email send to {participant.email}")
                 server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
                 server.starttls()
                 server.login(EMAIL_USER, EMAIL_PASSWORD)
                 server.send_message(msg)
                 server.quit()
+                print(f"[EMAIL] Email sent successfully to {participant.email}")
                 
                 # Update participant record
                 with app.app_context():
                     participant.cert_sent = True
                     participant.cert_sent_date = datetime.utcnow()
                     db.session.commit()
+                    print(f"[EMAIL] Updated participant record for {participant.name}")
             except Exception as e:
-                print(f"Error sending email: {e}")
+                print(f"[EMAIL] Error sending email to {participant.email}: {e}")
             finally:
                 # Clean up temp file
                 try:
                     os.unlink(temp_file.name)
+                    print(f"[EMAIL] Cleaned up temporary file: {temp_file.name}")
                 except:
                     pass
                     
         # Start email thread
         email_thread = Thread(target=send_email_task)
         email_thread.start()
+        print(f"[CERTIFICATE] Email queued for {participant.name}")
         
         return jsonify({
             "status": "success",
             "message": "Certificate has been queued for sending"
         })
     except Exception as e:
+        print(f"[CERTIFICATE] Error in send_certificate: {str(e)}")
         # Clean up temp file if it exists
         try:
-            os.unlink(temp_file.name)
+            if 'temp_file' in locals():
+                os.unlink(temp_file.name)
+                print(f"[CERTIFICATE] Cleaned up temp file after error")
         except:
             pass
             
         return jsonify({
             "status": "error",
-            "message": str(e)
+            "message": str(e),
+            "participant_id": participant_id
         }), 500
 
 # Bulk operations
@@ -1902,6 +2019,284 @@ def serve_react(path):
             "path": path,
             "static_folder": static_folder
         }), 500
+
+# ===== MISSING API ENDPOINTS =====
+
+# Test certificate generation without email
+@app.route('/api/test-certificate/<int:participant_id>', methods=['GET'])
+def test_certificate(participant_id):
+    """Test certificate generation without sending email"""
+    try:
+        print(f"[TEST-CERT] Testing certificate generation for participant ID: {participant_id}")
+        
+        # Use session.get() instead of deprecated query.get()
+        participant = db.session.get(Participant, participant_id)
+        if not participant:
+            return jsonify({
+                "status": "error",
+                "message": "Participant not found"
+            }), 404
+            
+        print(f"[TEST-CERT] Found participant: {participant.name}")
+        
+        # Check certificate generation schedule
+        now = datetime.now()
+        current_date = now.date()
+        
+        # Allow testing today (August 17, 2025) anytime
+        today_allowed = datetime(2025, 8, 17).date()
+        
+        # Allow testing from September 5, 2025 at 5:00 PM onwards
+        conference_start = datetime(2025, 9, 5, 17, 0, 0)  # September 5, 2025 at 5:00 PM
+        
+        testing_allowed = False
+        
+        if current_date == today_allowed:
+            # Today is allowed anytime
+            testing_allowed = True
+            print(f"[TEST-CERT] Testing allowed - Today ({current_date}) is the testing day")
+        elif now >= conference_start:
+            # After conference start time
+            testing_allowed = True
+            print(f"[TEST-CERT] Testing allowed - Conference period active since {conference_start}")
+        else:
+            # Not allowed yet
+            testing_allowed = False
+            restriction_message = f"Certificate generation will be available from September 5, 2025 at 5:00 PM. Current time: {now.strftime('%B %d, %Y at %I:%M %p')}"
+            print(f"[TEST-CERT] Testing restricted - {restriction_message}")
+        
+        if not testing_allowed:
+            return jsonify({
+                "status": "error",
+                "message": "Certificate generation is not available at this time",
+                "details": f"Certificate generation will be available from September 5, 2025 at 5:00 PM. Current time: {now.strftime('%B %d, %Y at %I:%M %p')}",
+                "available_from": "September 5, 2025 at 5:00 PM"
+            }), 403
+        
+        # Generate certificate HTML
+        if participant.cert_type == 'service':
+            html = render_template_string(
+                SERVICE_CERTIFICATE_TEMPLATE,
+                name=participant.name,
+                service_text=CERT_SERVICE_TEXT,
+                certificate_id=participant.certificate_id,
+                chairman_signature=CHAIRMAN_SIGNATURE,
+                secretary_signature=SECRETARY_SIGNATURE,
+                logo=MDCAN_LOGO
+            )
+        else:
+            html = render_template_string(
+                PARTICIPATION_CERTIFICATE_TEMPLATE,
+                name=participant.name,
+                event_text=CERT_EVENT_TEXT,
+                certificate_id=participant.certificate_id,
+                president_signature=PRESIDENT_SIGNATURE,
+                chairman_signature=CHAIRMAN_SIGNATURE,
+                logo=MDCAN_LOGO
+            )
+        
+        # Test PDF generation
+        if PDF_GENERATION_AVAILABLE:
+            try:
+                pdf = pdfkit.from_string(html, False, configuration=PDF_CONFIG)
+                print(f"[TEST-CERT] PDF generated successfully, size: {len(pdf)} bytes")
+                pdf_status = "success"
+                pdf_size = len(pdf)
+            except Exception as e:
+                print(f"[TEST-CERT] PDF generation failed: {e}")
+                pdf_status = f"failed: {str(e)}"
+                pdf_size = 0
+        else:
+            pdf_status = "unavailable"
+            pdf_size = 0
+        
+        return jsonify({
+            "status": "success",
+            "participant": {
+                "id": participant.id,
+                "name": participant.name,
+                "email": participant.email,
+                "cert_type": participant.cert_type,
+                "certificate_id": participant.certificate_id
+            },
+            "pdf_generation": {
+                "status": pdf_status,
+                "size_bytes": pdf_size,
+                "available": PDF_GENERATION_AVAILABLE
+            },
+            "email_config": {
+                "configured": bool(EMAIL_HOST and EMAIL_USER and EMAIL_PASSWORD),
+                "host_set": bool(EMAIL_HOST),
+                "user_set": bool(EMAIL_USER),
+                "password_set": bool(EMAIL_PASSWORD)
+            },
+            "html_preview": html[:200] + "..." if len(html) > 200 else html
+        })
+        
+    except Exception as e:
+        print(f"[TEST-CERT] Error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route('/api/programs', methods=['GET'])
+def get_programs():
+    """Get all conference programs/sessions"""
+    try:
+        # For now, return empty array with sample structure
+        # This can be expanded later when program management is implemented
+        sample_programs = [
+            {
+                "id": 1,
+                "title": "Opening Ceremony",
+                "description": "Welcome and conference opening",
+                "program_type": "ceremony",
+                "start_time": "2025-09-01T09:00:00",
+                "end_time": "2025-09-01T10:00:00",
+                "venue": "Main Auditorium",
+                "speaker_name": "Prof. Aminu Mohammed",
+                "speaker_bio": "MDCAN President",
+                "capacity": 500,
+                "is_mandatory": True,
+                "requires_registration": False,
+                "status": "scheduled"
+            }
+        ]
+        
+        return jsonify(sample_programs), 200
+        
+    except Exception as e:
+        print(f"Error in get_programs: {e}")
+        return jsonify({"error": "Failed to fetch programs", "message": str(e)}), 500
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    """Get all notifications"""
+    try:
+        # For now, return empty array with sample structure
+        # This can be expanded later when notification system is implemented
+        sample_notifications = [
+            {
+                "id": 1,
+                "title": "Welcome to MDCAN BDM 2025",
+                "message": "Thank you for registering for the conference. Check your email for updates.",
+                "type": "info",
+                "priority": "normal",
+                "created_at": "2025-08-17T12:00:00",
+                "is_active": True,
+                "target_audience": "all"
+            }
+        ]
+        
+        return jsonify(sample_notifications), 200
+        
+    except Exception as e:
+        print(f"Error in get_notifications: {e}")
+        return jsonify({"error": "Failed to fetch notifications", "message": str(e)}), 500
+
+@app.route('/api/check-ins/day/<int:day>', methods=['GET'])
+def get_check_ins(day):
+    """Get check-ins for a specific day"""
+    try:
+        # Mock data for now - in a real app this would come from a check-in system
+        check_ins = []
+        
+        # Try to get participants who would be checked in
+        try:
+            participants = Participant.query.all()
+            # For demo purposes, simulate some participants being checked in
+            for i, participant in enumerate(participants[:min(5, len(participants))]):
+                if i % 2 == 0:  # Every other participant for variety
+                    check_ins.append({
+                        "id": participant.id,
+                        "participant_id": participant.id,
+                        "name": participant.name,
+                        "email": participant.email,
+                        "check_in_time": "09:00:00",
+                        "day": day,
+                        "status": "present"
+                    })
+        except Exception as db_error:
+            print(f"Database query error in check-ins: {db_error}")
+            # Return empty list if database query fails
+            pass
+        
+        return jsonify({
+            "day": day,
+            "check_ins": check_ins,
+            "total": len(check_ins)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error in get_check_ins: {e}")
+        return jsonify({"error": "Failed to fetch check-ins", "message": str(e)}), 500
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    """Get conference statistics"""
+    try:
+        # Get participant count from database
+        total_participants = 0
+        certificates_sent = 0
+        certificates_pending = 0
+        participation_certificates = 0
+        service_certificates = 0
+        certificates_failed = 0
+        
+        try:
+            # Try to query the database
+            participants = Participant.query.all()
+            total_participants = len(participants)
+            
+            for participant in participants:
+                if participant.cert_sent:
+                    certificates_sent += 1
+                else:
+                    certificates_pending += 1
+                    
+                if participant.cert_type == 'participation':
+                    participation_certificates += 1
+                elif participant.cert_type == 'service':
+                    service_certificates += 1
+                    
+        except Exception as db_error:
+            print(f"Database query error in stats: {db_error}")
+            # Return default stats if database query fails
+            pass
+        
+        stats = {
+            "participants": {
+                "total": total_participants,
+                "certificates_sent": certificates_sent,
+                "certificates_pending": certificates_pending,
+                "participation_certificates": participation_certificates,
+                "service_certificates": service_certificates,
+                "certificates_failed": certificates_failed
+            },
+            "programs": {
+                "total": 10,
+                "completed": 0,
+                "upcoming": 10
+            },
+            "certificates": {
+                "total": total_participants,
+                "sent": certificates_sent,
+                "pending": certificates_pending,
+                "failed": certificates_failed
+            },
+            "feedback": {
+                "total_responses": 0,
+                "average_rating": 0.0,
+                "top_rated_sessions": []
+            }
+        }
+        
+        return jsonify(stats), 200
+        
+    except Exception as e:
+        print(f"Error in get_stats: {e}")
+        return jsonify({"error": "Failed to fetch stats", "message": str(e)}), 500
 
 # Initialize the application
 if __name__ == "__main__":

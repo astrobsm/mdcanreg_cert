@@ -1,6 +1,9 @@
 import React from 'react';
 
-const ParticipantList = ({ participants, onSendCertificate, onSendAllCertificates, loading }) => {
+const ParticipantList = ({ participants = [], onSendCertificate, onSendAllCertificates, loading }) => {
+  // Ensure participants is always an array
+  const participantsList = Array.isArray(participants) ? participants : [];
+  
   const getStatusBadge = (status) => {
     const statusClass = status === 'sent' ? 'status-sent' : 
                        status === 'failed' ? 'status-failed' : 'status-pending';
@@ -14,8 +17,8 @@ const ParticipantList = ({ participants, onSendCertificate, onSendAllCertificate
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Participants List ({participants.length})</h2>
-        {participants.length > 0 && (
+        <h2>Participants List ({participantsList.length})</h2>
+        {participantsList.length > 0 && (
           <button
             className="btn btn-success"
             onClick={onSendAllCertificates}
@@ -26,7 +29,7 @@ const ParticipantList = ({ participants, onSendCertificate, onSendAllCertificate
         )}
       </div>
 
-      {participants.length === 0 ? (
+      {participantsList.length === 0 ? (
         <p>No participants added yet. Use the "Add Participant" tab to add participants.</p>
       ) : (
         <table className="participants-table">
@@ -42,12 +45,12 @@ const ParticipantList = ({ participants, onSendCertificate, onSendAllCertificate
             </tr>
           </thead>
           <tbody>
-            {participants.map((participant) => (
-              <tr key={participant.id}>
-                <td>{participant.name}</td>
-                <td>{participant.email}</td>
-                <td>{participant.organization || '-'}</td>
-                <td>{participant.position || '-'}</td>
+            {participantsList.map((participant) => (
+              <tr key={participant.id || participant.email}>
+                <td>{participant.name || 'N/A'}</td>
+                <td>{participant.email || 'N/A'}</td>
+                <td>{participant.organization || participant.institution || '-'}</td>
+                <td>{participant.position || participant.role || '-'}</td>
                 <td>
                   <span className={`status-badge ${participant.certificate_type === 'service' ? 'status-service' : 'status-participation'}`}>
                     {participant.certificate_type === 'service' ? 'Service' : 'Participation'}

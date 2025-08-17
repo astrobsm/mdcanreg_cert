@@ -23,7 +23,8 @@ const MaterialsUpload = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/materials');
-      setMaterials(response.data);
+      const materialsData = Array.isArray(response.data) ? response.data : [];
+      setMaterials(materialsData);
       setLoading(false);
     } catch (err) {
       setError('Failed to load materials. Please try again.');

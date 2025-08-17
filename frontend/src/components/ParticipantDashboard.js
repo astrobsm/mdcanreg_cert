@@ -9,6 +9,7 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
 
   useEffect(() => {
     loadDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [participantEmail]);
 
   const loadDashboardData = async () => {
@@ -35,7 +36,10 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `MDCAN_BDM_2025_Certificate_${dashboardData.participant.name.replace(' ', '_')}.pdf`);
+      const fileName = dashboardData?.participant?.name 
+        ? `MDCAN_BDM_2025_Certificate_${dashboardData.participant.name.replace(/ /g, '_')}.pdf`
+        : 'MDCAN_BDM_2025_Certificate.pdf';
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -97,12 +101,24 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
     return <div className="loading-spinner">Loading your dashboard...</div>;
   }
 
-  if (!dashboardData) {
+  if (loading) {
+    return (
+      <div className="loading-state">
+        <h3>🔄 Loading Dashboard...</h3>
+        <p>Please wait while we load your conference information.</p>
+      </div>
+    );
+  }
+
+  if (!dashboardData || !dashboardData.participant) {
     return (
       <div className="error-state">
         <h3>⚠️ Dashboard Unavailable</h3>
         <p>Unable to load your dashboard. Please try again later.</p>
         {message && <p className="error">{message}</p>}
+        <button onClick={loadDashboardData} className="retry-btn">
+          🔄 Retry
+        </button>
       </div>
     );
   }
@@ -114,7 +130,7 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="welcome-section">
-          <h2>👋 Welcome, {participant.name}!</h2>
+          <h2>👋 Welcome, {participant?.name || 'Participant'}!</h2>
           <p>Your MDCAN BDM 2025 Conference Dashboard</p>
         </div>
         
@@ -435,7 +451,7 @@ const ParticipantDashboard = ({ participantEmail, onDataUpdate }) => {
               <div className="info-grid">
                 <div className="info-item">
                   <strong>Name:</strong>
-                  <span>{participant.name}</span>
+                  <span>{participant?.name || 'Not provided'}</span>
                 </div>
                 
                 <div className="info-item">

@@ -168,11 +168,21 @@ function App() {
     }
   }, [userType]);
 
+  // Reload participants when switching to participants tab
+  useEffect(() => {
+    if (userType === 'admin' && activeTab === 'participants') {
+      loadParticipants();
+    }
+  }, [activeTab, userType]);
+
   const loadParticipants = async () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/participants');
-      setParticipants(response.data);
+      // Handle the API response structure: { count: number, participants: array }
+      const participantsData = Array.isArray(response.data.participants) ? response.data.participants : 
+                              Array.isArray(response.data) ? response.data : [];
+      setParticipants(participantsData);
     } catch (error) {
       console.error('Error loading participants:', error);
       setMessage('Failed to load participants');
@@ -229,11 +239,24 @@ function App() {
   const loginAsParticipant = async (email) => {
     try {
       const response = await axios.get(`/api/participants/${email}/dashboard`);
-      setCurrentUser(response.data.participant);
-      setUserType('participant');
-      setActiveTab('dashboard');
+      // Extract participant data from the dashboard response
+      const participantData = response.data.dashboard?.participant || response.data.participant;
+      if (participantData) {
+        setCurrentUser(participantData);
+        setUserType('participant');
+        setActiveTab('dashboard');
+        setMessage(`Welcome back, ${participantData.name}! Dashboard loaded successfully.`);
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setMessage('Unable to load participant data. Please try again.');
+      }
     } catch (error) {
-      setMessage('Participant not found. Please register first.');
+      console.error('Login error:', error);
+      if (error.response?.status === 404) {
+        setMessage('Participant not found. Please check your email or register first.');
+      } else {
+        setMessage('Error accessing dashboard. Please try again later.');
+      }
     }
   };
 
