@@ -55,9 +55,9 @@ RUN echo "🔧 Critical deployment configuration:" && \
 
 EXPOSE 8080
 
-# CRITICAL: Health check that matches Digital Ocean expectations
+# CRITICAL: Health check that matches Digital Ocean expectations with dynamic PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=5 \
-    CMD curl -f http://localhost:8080/health || curl -f http://127.0.0.1:8080/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/health || curl -f http://127.0.0.1:${PORT:-8080}/health || exit 1
 
-# CRITICAL: Ultra-explicit startup command with comprehensive logging
-CMD ["sh", "-c", "echo '🚀 MDCAN BDM 2025 - STARTING APPLICATION' && echo 'Binding: 0.0.0.0:8080' && echo 'Environment: production' && echo 'Starting gunicorn...' && exec gunicorn --bind 0.0.0.0:8080 --workers 1 --worker-class sync --timeout 120 --keep-alive 2 --log-level info --access-logfile - --error-logfile - --preload wsgi:application"]
+# CRITICAL: Dynamic PORT binding as required by Digital Ocean
+CMD ["sh", "-c", "echo '🚀 MDCAN BDM 2025 - STARTING APPLICATION' && echo 'Binding: 0.0.0.0:'${PORT:-8080} && echo 'Environment: production' && echo 'Starting gunicorn...' && exec gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --worker-class sync --timeout 120 --keep-alive 2 --log-level info --access-logfile - --error-logfile - --preload wsgi:application"]
