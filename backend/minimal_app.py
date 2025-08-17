@@ -46,17 +46,30 @@ try:
     # Configure wkhtmltopdf path - different for Windows vs Linux/Production
     if os.name == 'nt':  # Windows
         WKHTMLTOPDF_PATH = r'C:\Users\USER\Documents\html2pdf\wkhtmltox\bin\wkhtmltopdf.exe'
-    else:  # Linux/Production
-        WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
+    else:  # Linux/Production - try multiple possible paths
+        possible_paths = [
+            '/usr/local/bin/wkhtmltopdf',  # From GitHub release
+            '/usr/bin/wkhtmltopdf',        # From package manager
+            'wkhtmltopdf'                  # From PATH
+        ]
+        WKHTMLTOPDF_PATH = None
+        for path in possible_paths:
+            if os.path.exists(path) or path == 'wkhtmltopdf':
+                WKHTMLTOPDF_PATH = path
+                break
     
-    # Test if the wkhtmltopdf executable exists
-    if os.path.exists(WKHTMLTOPDF_PATH):
-        # Configure pdfkit to use the specific path
-        config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
-        PDF_CONFIG = config
-        PDF_GENERATION_AVAILABLE = True
-        print(f"✅ PDF generation available with wkhtmltopdf at: {WKHTMLTOPDF_PATH}")
-    else:
+    # Test if the wkhtmltopdf executable exists and works
+    if WKHTMLTOPDF_PATH and WKHTMLTOPDF_PATH != 'wkhtmltopdf':
+        if os.path.exists(WKHTMLTOPDF_PATH):
+            # Configure pdfkit to use the specific path
+            config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+            PDF_CONFIG = config
+            PDF_GENERATION_AVAILABLE = True
+            print(f"✅ PDF generation available with wkhtmltopdf at: {WKHTMLTOPDF_PATH}")
+        else:
+            WKHTMLTOPDF_PATH = None
+    
+    if not WKHTMLTOPDF_PATH:
         # Try default path (in case it's in PATH)
         try:
             config = pdfkit.configuration()
@@ -66,7 +79,8 @@ try:
         except Exception as e:
             PDF_CONFIG = None
             PDF_GENERATION_AVAILABLE = False
-            print(f"⚠️  wkhtmltopdf not found at {WKHTMLTOPDF_PATH} or in PATH: {e}")
+            print(f"⚠️  wkhtmltopdf not found in any location: {e}")
+            print("   PDF generation will be disabled")
             
 except ImportError as e:
     print(f"⚠️  PDF generation not available: {e}")

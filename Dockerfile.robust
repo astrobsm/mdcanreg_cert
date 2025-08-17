@@ -2,13 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install essential system dependencies for PostgreSQL and PDF generation
+# Install essential system dependencies first
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
     curl \
     wget \
-    xvfb \
     fontconfig \
     libfontconfig1 \
     libfreetype6 \
@@ -20,17 +19,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender1 \
     libssl3 \
     ca-certificates \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
-# Install wkhtmltopdf from official GitHub releases (more reliable than package repos)
-RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || true \
-    && apt-get update && apt-get install -f -y \
-    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && rm -rf /var/lib/apt/lists/*
+# Try multiple methods to install wkhtmltopdf
+RUN echo "Attempting to install wkhtmltopdf..." && \
+    # Method 1: Try the official GitHub release
+    (wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb && \
+     dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || \
+     (apt-get update && apt-get install -f -y)) || \
+    # Method 2: Try installing from alternative source
+    (wget -q https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bullseye_amd64.deb && \
+     dpkg -i wkhtmltox_0.12.5-1.bullseye_amd64.deb || \
+     (apt-get update && apt-get install -f -y)) || \
+    # Method 3: Install minimal version from packages if available
+    (apt-get update && apt-get install -y wkhtmltopdf) || \
+    echo "wkhtmltopdf installation failed - will run without PDF generation" && \
+    # Clean up
+    rm -f *.deb && \
+    rm -rf /var/lib/apt/lists/*
 
-# Verify wkhtmltopdf installation
-RUN wkhtmltopdf --version && echo "✅ wkhtmltopdf installed successfully" || echo "❌ wkhtmltopdf installation failed"
+# Verify installation (but don't fail if it doesn't work)
+RUN wkhtmltopdf --version && echo "✅ wkhtmltopdf installed successfully" || echo "⚠️ wkhtmltopdf not available - PDF generation disabled"
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
