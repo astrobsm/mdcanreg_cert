@@ -1,45 +1,64 @@
-FROM ubuntu:20.04
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Prevent interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install essential system dependencies first
+# Install essential system dependencies for PostgreSQL and PDF generation
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
     curl \
     wget \
+    xvfb \
     fontconfig \
     libfontconfig1 \
     libfreetype6 \
-    libjpeg8 \
+    libjpeg62-turbo \
     libpng16-16 \
     libx11-6 \
     libxcb1 \
     libxext6 \
     libxrender1 \
-    libssl1.1 \
+    libssl3 \
     ca-certificates \
-    xvfb \
-    python3 \
-    python3-pip \
-    python3-dev \
-    xfonts-75dpi \
-    xfonts-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Install wkhtmltopdf (should work better with Ubuntu 20.04)
-RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.focal_amd64.deb && \
-    dpkg -i wkhtmltox_0.12.6.1-2.focal_amd64.deb && \
-    rm wkhtmltox_0.12.6.1-2.focal_amd64.deb && \
-    echo "✅ wkhtmltopdf installed successfully" || \
-    (echo "❌ wkhtmltopdf installation failed" && \
-     echo '#!/bin/bash' > /usr/local/bin/wkhtmltopdf && \
-     echo 'echo "Error: wkhtmltopdf not available"' >> /usr/local/bin/wkhtmltopdf && \
-     echo 'exit 1' >> /usr/local/bin/wkhtmltopdf && \
-     chmod +x /usr/local/bin/wkhtmltopdf)
+# Install wkhtmltopdf using multiple fallback methods
+RUN echo "Installing wkhtmltopdf with fallback methods..." && \
+    # Method 1: Try installing missing dependencies first
+    (apt-get update && apt-get install -y --no-install-recommends \
+        xfonts-75dpi xfonts-base && \
+     # Try to install compatible libssl version
+     wget -q http://security.debian.org/debian-security/pool/updates/main/o/openssl1.0/libssl1.0.2_1.0.2ze-1+deb9u4_amd64.deb && \
+     dpkg -i libssl1.0.2_1.0.2ze-1+deb9u4_amd64.deb 2>/dev/null || \
+     # If that fails, create compatibility symlink
+     (ln -sf /usr/lib/x86_64-linux-gnu/libssl.so.3 /usr/lib/x86_64-linux-gnu/libssl.so.1.1 || true) && \
+     # Now try to install wkhtmltopdf
+     wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb && \
+     dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb && \
+     rm -f *.deb) || \
+    # Method 2: Try alternative version
+    (wget -q https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bullseye_amd64.deb && \
+     dpkg -i wkhtmltox_0.12.5-1.bullseye_amd64.deb && \
+     rm -f *.deb) || \
+    # Method 3: Install from packages (if available)
+    (apt-get update && apt-get install -y wkhtmltopdf) || \
+    # Method 4: Create fallback that won't break the app
+    echo "⚠️ All wkhtmltopdf installation methods failed - creating graceful fallback" && \
+    # Clean up
+    rm -f *.deb && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify installation and create fallback
+RUN if command -v wkhtmltopdf >/dev/null 2>&1; then \
+        echo "✅ wkhtmltopdf installed successfully at: $(which wkhtmltopdf)"; \
+        wkhtmltopdf --version || echo "wkhtmltopdf found but version check failed"; \
+    else \
+        echo "❌ wkhtmltopdf not available - creating fallback script"; \
+        echo '#!/bin/bash' > /usr/local/bin/wkhtmltopdf; \
+        echo 'echo "Error: wkhtmltopdf not available in container"' >> /usr/local/bin/wkhtmltopdf; \
+        echo 'exit 1' >> /usr/local/bin/wkhtmltopdf; \
+        chmod +x /usr/local/bin/wkhtmltopdf; \
+    fi
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .

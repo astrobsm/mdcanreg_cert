@@ -2,35 +2,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install essential system dependencies for PostgreSQL and PDF generation
+# Install essential system dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
     curl \
     wget \
-    xvfb \
-    fontconfig \
-    libfontconfig1 \
-    libfreetype6 \
-    libjpeg62-turbo \
-    libpng16-16 \
-    libx11-6 \
-    libxcb1 \
-    libxext6 \
-    libxrender1 \
-    libssl3 \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install wkhtmltopdf from official GitHub releases (more reliable than package repos)
-RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || true \
-    && apt-get update && apt-get install -f -y \
-    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && rm -rf /var/lib/apt/lists/*
-
-# Verify wkhtmltopdf installation
-RUN wkhtmltopdf --version && echo "✅ wkhtmltopdf installed successfully" || echo "❌ wkhtmltopdf installation failed"
+# Create a dummy wkhtmltopdf that fails gracefully
+RUN echo '#!/bin/bash' > /usr/local/bin/wkhtmltopdf && \
+    echo 'echo "Error: wkhtmltopdf not available in this container - PDF generation disabled"' >> /usr/local/bin/wkhtmltopdf && \
+    echo 'exit 1' >> /usr/local/bin/wkhtmltopdf && \
+    chmod +x /usr/local/bin/wkhtmltopdf
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
@@ -44,8 +28,6 @@ COPY . .
 ENV PYTHONPATH="/app:/app/backend"
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
-
-# CRITICAL: Set explicit PORT environment variable for Digital Ocean
 ENV PORT=8080
 
 # Ensure frontend build exists with proper structure
@@ -66,19 +48,9 @@ RUN mkdir -p frontend/build/static && \
     echo '</html>' >> frontend/build/index.html && \
     echo "Frontend build directory created with index.html"
 
-# CRITICAL: Binding and health check verification
-RUN echo "🔧 Critical deployment configuration:" && \
-    echo "  - Target binding: 0.0.0.0:8080" && \
-    echo "  - PORT environment: ${PORT}" && \
-    echo "  - Health check endpoint: /health" && \
-    echo "  - Frontend build: $(ls -la frontend/build/ | wc -l) files" && \
-    echo "✅ Configuration verified"
-
 EXPOSE 8080
 
-# CRITICAL: Health check that matches Digital Ocean expectations with dynamic PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=5 \
     CMD curl -f http://localhost:${PORT:-8080}/health || curl -f http://127.0.0.1:${PORT:-8080}/health || exit 1
 
-# CRITICAL: Dynamic PORT binding using gunicorn config file
-CMD ["sh", "-c", "echo '🚀 MDCAN BDM 2025 - STARTING APPLICATION' && echo 'Binding: 0.0.0.0:'${PORT:-8080} && echo 'Environment: production' && echo 'Starting gunicorn with config file...' && exec gunicorn --config gunicorn.conf.py wsgi:application"]
+CMD ["sh", "-c", "echo '🚀 MDCAN BDM 2025 - STARTING APPLICATION (PDF DISABLED)' && echo 'Binding: 0.0.0.0:'${PORT:-8080} && echo 'Environment: production' && echo 'Starting gunicorn with config file...' && exec gunicorn --config gunicorn.conf.py wsgi:application"]
