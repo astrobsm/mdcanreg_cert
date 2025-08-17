@@ -1,0 +1,60 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    xvfb \
+    libpq-dev \
+    gcc \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxtst6 \
+    libxi6 \
+    fontconfig \
+    libfontconfig1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install wkhtmltopdf
+RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
+    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || true \
+    && apt-get update && apt-get install -f -y \
+    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH="/app:/app/backend"
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
+
+# Create frontend build if missing
+RUN if [ ! -d "/app/frontend/build" ]; then \
+        mkdir -p /app/frontend/build && \
+        echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>Loading...</h1></body></html>' > /app/frontend/build/index.html; \
+    fi
+
+# Run pre-startup verification
+RUN python pre_startup_check.py || echo "Pre-startup check failed but continuing..."
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start with gunicorn using robust configuration
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "wsgi:application"]

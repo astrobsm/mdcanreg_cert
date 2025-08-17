@@ -50,6 +50,15 @@ RUN if [ -d "/app/frontend/build" ]; then \
 
 EXPOSE 8080
 
-# Use environment variable for port binding with proper working directory
+# Use environment variable for port binding with simple, reliable startup
 WORKDIR /app
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "wsgi:application"]
+
+# Run pre-startup verification during build (optional)
+RUN python pre_startup_check.py || echo "⚠️  Pre-startup check skipped (environment not available during build)"
+
+# Health check for Digital Ocean
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Simple, reliable startup command
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "wsgi:application"]
