@@ -477,17 +477,69 @@ def test_simple():
 
 @app.route('/api/health')
 def health():
-    """Health check endpoint with deployment timestamp"""
-    return jsonify({
-        "status": "ok",
-        "timestamp": datetime.utcnow().isoformat(),
-        "deployment": "SSL_CA_CONFIGURED_v2"
-    })
+    """Comprehensive health check endpoint with deployment status"""
+    try:
+        # Test database connection
+        db_status = "unknown"
+        try:
+            with app.app_context():
+                db.session.execute(sa.text("SELECT 1"))
+                db_status = "connected"
+        except Exception:
+            db_status = "disconnected"
+        
+        health_data = {
+            "status": "ok",
+            "service": "MDCAN BDM 2025 Certificate Platform",
+            "timestamp": datetime.utcnow().isoformat(),
+            "database": db_status,
+            "environment": os.environ.get('FLASK_ENV', 'development'),
+            "port": os.environ.get('PORT', '8080'),
+            "pdf_generation": PDF_GENERATION_AVAILABLE,
+            "frontend_build": bool(FRONTEND_BUILD_FOLDER and os.path.exists(FRONTEND_BUILD_FOLDER)),
+            "deployment": "DIGITAL_OCEAN_TARGETED_FIXES_v3"
+        }
+        
+        return jsonify(health_data), 200
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
 
 @app.route('/health')
 def health_check():
-    """Health check endpoint for Digital Ocean"""
-    return jsonify({"status": "healthy"})
+    """Simple health check endpoint for Digital Ocean load balancer"""
+    try:
+        # Basic validation that app is running
+        app_working = True
+        
+        # Test basic imports
+        try:
+            import flask
+            import sqlalchemy
+        except ImportError:
+            app_working = False
+        
+        if app_working:
+            return jsonify({
+                "status": "healthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "service": "mdcan-bdm-2025"
+            }), 200
+        else:
+            return jsonify({
+                "status": "unhealthy",
+                "message": "Core dependencies missing"
+            }), 503
+            
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 @app.route('/static/<path:filename>')
 def serve_static_assets(filename):
