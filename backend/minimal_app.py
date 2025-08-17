@@ -81,8 +81,17 @@ if not static_folder:
 
 # Configure database connection
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///mdcan_certificates.db')
+
+# Handle Digital Ocean managed database URL
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+# For Digital Ocean, ensure proper SSL configuration in URL if not present
+if 'postgresql://' in DATABASE_URL and 'sslmode' not in DATABASE_URL:
+    separator = '&' if '?' in DATABASE_URL else '?'
+    DATABASE_URL = f"{DATABASE_URL}{separator}sslmode=prefer"
+
+print(f"Database URL configured (sanitized): {DATABASE_URL.split('@')[0]}@***")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -90,29 +99,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Enhanced SSL configuration for production database
 engine_options = {
     'pool_pre_ping': True,
-    'pool_recycle': 300
+    'pool_recycle': 300,
+    'pool_size': 5,
+    'max_overflow': 10
 }
 
-# Add SSL configuration if using PostgreSQL (currently disabled for troubleshooting)
+# Add minimal SSL configuration for PostgreSQL
 if 'postgresql://' in DATABASE_URL:
-    # Temporarily disable SSL to fix connection issues
-    # engine_options['connect_args']['sslmode'] = 'require'
-    print("SSL temporarily disabled for troubleshooting database connection")
-    
-    # For Digital Ocean managed PostgreSQL, sslmode=require is usually sufficient
-    # CA certificate is optional and may not be needed
-    ca_cert_path = os.path.join(os.path.dirname(__file__), 'ca-certificate.crt')
-    
-    # Only add CA certificate if explicitly needed (can be disabled by environment variable)
-    use_ca_cert = os.environ.get('USE_SSL_CA_CERT', 'false').lower() == 'true'
-    
-    if use_ca_cert and os.path.exists(ca_cert_path):
-        if 'connect_args' not in engine_options:
-            engine_options['connect_args'] = {}
-        engine_options['connect_args']['sslrootcert'] = ca_cert_path
-        print(f"Using SSL CA certificate: {ca_cert_path}")
-    else:
-        print("Using connection without SSL enforcement (temporary fix)")
+    print("Using PostgreSQL with automatic SSL configuration")
     
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
@@ -163,10 +157,16 @@ class Participant(db.Model):
 # Ensure the database is created (useful for SQLite)
 with app.app_context():
     try:
+        # Test database connection first
+        with db.engine.connect() as connection:
+            connection.execute(sa.text('SELECT 1'))
+        
+        # Create tables if connection is successful
         db.create_all()
         print("Database tables created successfully")
     except Exception as e:
-        print(f"Error creating database tables: {e}")
+        print(f"Database initialization skipped: {e}")
+        # Don't fail the entire application if database is not available yet
 
 # Email configuration
 EMAIL_HOST = os.environ.get('EMAIL_HOST')
