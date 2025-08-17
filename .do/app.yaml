@@ -11,6 +11,9 @@ databases:
   version: "17"
 
 envs:
+- key: PORT
+  scope: RUN_TIME
+  value: "8080"
 - key: DATABASE_URL
   scope: RUN_TIME
   value: ${astrobsmvelvet-db.DATABASE_URL}

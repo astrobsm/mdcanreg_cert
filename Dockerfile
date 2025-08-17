@@ -32,6 +32,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all application files
 COPY . .
 
+# Set Python path to include current directory and backend
+ENV PYTHONPATH="/app:/app/backend:$PYTHONPATH"
+
 # Ensure the frontend build directory exists and has the right structure
 RUN ls -la /app/
 RUN if [ -d "/app/frontend/build" ]; then \
@@ -45,5 +48,6 @@ RUN if [ -d "/app/frontend/build" ]; then \
 
 EXPOSE 8080
 
-# Use environment variable for port binding
+# Use environment variable for port binding with proper working directory
+WORKDIR /app
 CMD ["gunicorn", "--config", "gunicorn.conf.py", "digital_ocean_app:app"]
