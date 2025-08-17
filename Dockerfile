@@ -27,13 +27,15 @@ RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all application files
 COPY . .
 
 # Set Python path to include current directory and backend
-ENV PYTHONPATH="/app:/app/backend:$PYTHONPATH"
+ENV PYTHONPATH="/app:/app/backend"
+ENV PYTHONUNBUFFERED=1
 
 # Ensure the frontend build directory exists and has the right structure
 RUN ls -la /app/
@@ -48,9 +50,6 @@ RUN if [ -d "/app/frontend/build" ]; then \
 
 EXPOSE 8080
 
-# Set Python path to include the app directory
-ENV PYTHONPATH=/app
-
 # Use environment variable for port binding with proper working directory
 WORKDIR /app
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "info", "wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--worker-class", "sync", "--timeout", "120", "--keep-alive", "2", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "wsgi:application"]
