@@ -9,15 +9,15 @@ import sys
 
 # CRITICAL: Dynamic binding configuration for Digital Ocean
 bind = f"0.0.0.0:{os.environ.get('PORT', '8080')}"  # Use dynamic PORT from environment
-workers = 1  # Single worker for 4GB instance
+workers = 2  # Increased workers for better performance
 worker_class = "sync"
 worker_connections = 1000
 
 # CRITICAL: Timeout and lifecycle settings
 timeout = 120  # Increased for PDF generation
-keepalive = 2
-max_requests = 500  # Restart workers after 500 requests
-max_requests_jitter = 50
+keepalive = 5  # Increased keepalive
+max_requests = 1000  # Restart workers after 1000 requests
+max_requests_jitter = 100
 graceful_timeout = 30
 
 # CRITICAL: Memory and resource management
@@ -34,6 +34,12 @@ capture_output = True
 # CRITICAL: Process naming for identification
 proc_name = "mdcan_bdm_2025_platform"
 
+# CRITICAL: Security and performance settings
+limit_request_line = 4096
+limit_request_fields = 100
+limit_request_field_size = 8190
+forwarded_allow_ips = "*"  # Allow all for Digital Ocean load balancer
+
 # CRITICAL: Startup verification hooks
 def on_starting(server):
     """Called just before the master process is initialized."""
@@ -44,6 +50,8 @@ def on_starting(server):
     logging.info(f"Worker class: {worker_class}")
     logging.info(f"Timeout: {timeout}s")
     logging.info(f"Environment PORT: {os.environ.get('PORT', 'not set')}")
+    logging.info(f"Python version: {sys.version}")
+    logging.info(f"Working directory: {os.getcwd()}")
 
 def on_reload(server):
     """Called when configuration is reloaded."""

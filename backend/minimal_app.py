@@ -43,11 +43,13 @@ except Exception as e:
 try:
     import pdfkit
     
-    # Configure wkhtmltopdf path for Windows
-    WKHTMLTOPDF_PATH = r'C:\Users\USER\Documents\html2pdf\wkhtmltox\bin\wkhtmltopdf.exe'
+    # Configure wkhtmltopdf path - different for Windows vs Linux/Production
+    if os.name == 'nt':  # Windows
+        WKHTMLTOPDF_PATH = r'C:\Users\USER\Documents\html2pdf\wkhtmltox\bin\wkhtmltopdf.exe'
+    else:  # Linux/Production
+        WKHTMLTOPDF_PATH = '/usr/bin/wkhtmltopdf'
     
     # Test if the wkhtmltopdf executable exists
-    import os
     if os.path.exists(WKHTMLTOPDF_PATH):
         # Configure pdfkit to use the specific path
         config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
