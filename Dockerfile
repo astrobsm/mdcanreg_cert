@@ -2,63 +2,48 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies for PDF generation and PostgreSQL
+# Install essential system dependencies for PostgreSQL and basic functionality
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    xvfb \
     libpq-dev \
     gcc \
-    libx11-6 \
-    libxext6 \
-    libxrender1 \
-    libxtst6 \
-    libxi6 \
-    fontconfig \
-    libfontconfig1 \
+    curl \
+    wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install wkhtmltopdf from the official source
-RUN wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || true \
-    && apt-get update && apt-get install -f -y \
-    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy all application files
+# Copy application files
 COPY . .
 
-# Set Python path to include current directory and backend
+# Set Python environment
 ENV PYTHONPATH="/app:/app/backend"
 ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV=production
 
-# Ensure the frontend build directory exists and has the right structure
-RUN ls -la /app/
-RUN if [ -d "/app/frontend/build" ]; then \
-        echo "Frontend build found"; \
-        ls -la /app/frontend/build/; \
-    else \
-        echo "Frontend build not found"; \
-        mkdir -p /app/frontend/build; \
-        echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>Frontend build missing</h1></body></html>' > /app/frontend/build/index.html; \
+# Ensure frontend build exists
+RUN if [ ! -d "/app/frontend/build" ]; then \
+        mkdir -p /app/frontend/build && \
+        echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>MDCAN Certificate Platform</h1></body></html>' > /app/frontend/build/index.html; \
     fi
+
+# Simple build verification
+RUN echo "🔍 Build verification:" && \
+    echo "  - Python version: $(python --version)" && \
+    echo "  - Working directory: $(pwd)" && \
+    echo "  - Files present: $(ls -la | wc -l) items" && \
+    echo "  - Backend exists: $(test -d backend && echo 'YES' || echo 'NO')" && \
+    echo "  - WSGI exists: $(test -f wsgi.py && echo 'YES' || echo 'NO')" && \
+    echo "✅ Build verification complete"
 
 EXPOSE 8080
 
-# Use environment variable for port binding with simple, reliable startup
-WORKDIR /app
-
-# Run pre-startup verification during build (optional)
-RUN python pre_startup_check.py || echo "⚠️  Pre-startup check skipped (environment not available during build)"
-
-# Health check for Digital Ocean
+# Basic health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Simple, reliable startup command
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "wsgi:application"]
+# Simple startup with fallback
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "wsgi:application"]

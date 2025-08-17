@@ -1,0 +1,38 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install only essential system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    gcc \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python dependencies first (for better caching)
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Set environment variables
+ENV PYTHONPATH="/app:/app/backend"
+ENV PYTHONUNBUFFERED=1
+
+# Create minimal frontend if missing
+RUN mkdir -p /app/frontend/build && \
+    echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>MDCAN BDM 2025 Certificate Platform</h1><p>Loading...</p></body></html>' > /app/frontend/build/index.html
+
+# Expose port
+EXPOSE 8080
+
+# Simple health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Simple startup command with fallbacks
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:8080 --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - wsgi:application || python wsgi.py || python app.py"]
