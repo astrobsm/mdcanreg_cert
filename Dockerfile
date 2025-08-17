@@ -48,6 +48,9 @@ RUN if [ -d "/app/frontend/build" ]; then \
 
 EXPOSE 8080
 
+# Set Python path to include the app directory
+ENV PYTHONPATH=/app
+
 # Use environment variable for port binding with proper working directory
 WORKDIR /app
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "digital_ocean_app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "info", "wsgi:application"]
