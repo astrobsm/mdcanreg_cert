@@ -37,7 +37,11 @@ try:
             "message": "MDCAN BDM 2025 Application loaded successfully",
             "database_url_configured": bool(os.environ.get('DATABASE_URL')),
             "port": os.environ.get('PORT', '8080'),
-            "environment": os.environ.get('FLASK_ENV', 'development')
+            "environment": os.environ.get('FLASK_ENV', 'development'),
+            "instance_resources": {
+                "pool_size": os.environ.get('DB_POOL_SIZE', '3'),
+                "max_overflow": os.environ.get('DB_MAX_OVERFLOW', '5')
+            }
         })
     
     logging.info("✅ Application loaded successfully")

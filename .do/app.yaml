@@ -17,6 +17,12 @@ envs:
 - key: DATABASE_URL
   scope: RUN_TIME
   value: ${astrobsmvelvet-db.DATABASE_URL}
+- key: DB_POOL_SIZE
+  scope: RUN_TIME
+  value: "3"
+- key: DB_MAX_OVERFLOW
+  scope: RUN_TIME
+  value: "5"
 - key: FLASK_ENV
   scope: RUN_AND_BUILD_TIME
   value: production
@@ -57,6 +63,6 @@ services:
     repo: astrobsm/mdcanreg_cert
   http_port: 8080
   instance_count: 1
-  instance_size_slug: apps-s-1vcpu-0.5gb
+  instance_size_slug: apps-s-2vcpu-4gb
   name: mdcanreg-cert
   source_dir: /

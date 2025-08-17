@@ -3,6 +3,7 @@ Flask-CORS==4.0.0
 Flask-SQLAlchemy==3.0.5
 psycopg2-binary==2.9.7
 pdfkit==1.0.0
+wkhtmltopdf==0.2
 Jinja2==3.1.2
 python-dotenv==1.0.0
 gunicorn==21.2.0

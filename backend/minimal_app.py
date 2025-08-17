@@ -97,11 +97,15 @@ app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Enhanced SSL configuration for production database
+# Use environment variables for pool configuration
+pool_size = int(os.environ.get('DB_POOL_SIZE', 3))
+max_overflow = int(os.environ.get('DB_MAX_OVERFLOW', 5))
+
 engine_options = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
-    'pool_size': 5,
-    'max_overflow': 10
+    'pool_size': pool_size,
+    'max_overflow': max_overflow
 }
 
 # Add minimal SSL configuration for PostgreSQL
@@ -1821,5 +1825,5 @@ def serve_react(path):
 
 # Initialize the application
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('PORT', 8080))  # Use 8080 for Digital Ocean compatibility
+    app.run(host='0.0.0.0', port=port, debug=False)
