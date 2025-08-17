@@ -226,15 +226,27 @@ class Participant(db.Model):
 # Ensure the database is created (useful for SQLite)
 with app.app_context():
     try:
-        # Test database connection first
+        print("🔗 Testing database connection...")
+        # Test database connection first with timeout
         with db.engine.connect() as connection:
-            connection.execute(sa.text('SELECT 1'))
+            result = connection.execute(sa.text('SELECT 1'))
+            print("✅ Database connection successful")
         
         # Create tables if connection is successful
+        print("📋 Creating database tables...")
         db.create_all()
-        print("Database tables created successfully")
+        print("✅ Database tables created successfully")
+        
+        # Test a simple query to ensure everything works
+        participant_count = db.session.query(Participant).count()
+        print(f"✅ Database operational - {participant_count} participants registered")
+        
     except Exception as e:
-        print(f"Database initialization skipped: {e}")
+        print(f"❌ Database initialization error: {e}")
+        print("⚠️ Application will start but database functionality may be limited")
+        # Log the full stack trace for debugging
+        import traceback
+        print(f"Full error trace: {traceback.format_exc()}")
         # Don't fail the entire application if database is not available yet
 
 # Email configuration

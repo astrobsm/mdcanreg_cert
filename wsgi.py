@@ -25,8 +25,29 @@ if backend_dir not in sys.path:
 # Log startup information
 logging.info(f"Starting MDCAN BDM 2025 Application from {app_dir}")
 logging.info(f"Python path: {sys.path[:3]}...")  # Log first 3 entries
-logging.info(f"Environment: PORT={os.environ.get('PORT', 'not set')}")
-logging.info(f"Database URL: {'configured' if os.environ.get('DATABASE_URL') else 'not configured'}")
+
+# Environment variables check
+port = os.environ.get('PORT', 'not set')
+database_url = os.environ.get('DATABASE_URL', 'not configured')
+admin_password = os.environ.get('ADMIN_PASSWORD', 'not configured')
+email_host = os.environ.get('EMAIL_HOST', 'not configured')
+
+logging.info(f"Environment: PORT={port}")
+logging.info(f"Database URL: {'configured' if database_url != 'not configured' else 'NOT CONFIGURED'}")
+logging.info(f"Admin Password: {'configured' if admin_password != 'not configured' else 'NOT CONFIGURED'}")
+logging.info(f"Email Host: {'configured' if email_host != 'not configured' else 'NOT CONFIGURED'}")
+
+# Check for critical missing environment variables
+missing_vars = []
+if database_url == 'not configured':
+    missing_vars.append('DATABASE_URL')
+if admin_password == 'not configured':
+    missing_vars.append('ADMIN_PASSWORD')
+
+if missing_vars:
+    logging.warning(f"⚠️ Missing critical environment variables: {', '.join(missing_vars)}")
+else:
+    logging.info("✅ All critical environment variables are configured")
 
 try:
     # Import the main application
