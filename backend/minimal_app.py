@@ -97,9 +97,11 @@ engine_options = {
     }
 }
 
-# Add SSL configuration if using PostgreSQL
+# Add SSL configuration if using PostgreSQL (currently disabled for troubleshooting)
 if 'postgresql://' in DATABASE_URL:
-    engine_options['connect_args']['sslmode'] = 'require'
+    # Temporarily disable SSL to fix connection issues
+    # engine_options['connect_args']['sslmode'] = 'require'
+    print("SSL temporarily disabled for troubleshooting database connection")
     
     # For Digital Ocean managed PostgreSQL, sslmode=require is usually sufficient
     # CA certificate is optional and may not be needed
@@ -112,7 +114,7 @@ if 'postgresql://' in DATABASE_URL:
         engine_options['connect_args']['sslrootcert'] = ca_cert_path
         print(f"Using SSL CA certificate: {ca_cert_path}")
     else:
-        print("Using SSL without CA certificate file (Digital Ocean managed SSL)")
+        print("Using connection without SSL enforcement (temporary fix)")
     
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 

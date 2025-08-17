@@ -13,7 +13,7 @@ databases:
 envs:
 - key: DATABASE_URL
   scope: RUN_TIME
-  value: ${astrobsmvelvet-db.DATABASE_URL}?sslmode=require
+  value: ${astrobsmvelvet-db.DATABASE_URL}
 - key: EMAIL_HOST
   scope: RUN_AND_BUILD_TIME
   value: smtp.gmail.com
