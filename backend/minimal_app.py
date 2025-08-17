@@ -90,11 +90,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Enhanced SSL configuration for production database
 engine_options = {
     'pool_pre_ping': True,
-    'pool_recycle': 300,
-    'connect_args': {
-        'connect_timeout': 10,
-        'application_name': 'MDCAN_BDM_2025'
-    }
+    'pool_recycle': 300
 }
 
 # Add SSL configuration if using PostgreSQL (currently disabled for troubleshooting)
@@ -111,6 +107,8 @@ if 'postgresql://' in DATABASE_URL:
     use_ca_cert = os.environ.get('USE_SSL_CA_CERT', 'false').lower() == 'true'
     
     if use_ca_cert and os.path.exists(ca_cert_path):
+        if 'connect_args' not in engine_options:
+            engine_options['connect_args'] = {}
         engine_options['connect_args']['sslrootcert'] = ca_cert_path
         print(f"Using SSL CA certificate: {ca_cert_path}")
     else:

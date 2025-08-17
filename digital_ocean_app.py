@@ -28,6 +28,11 @@ try:
     logging.info("Backend directory exists: %s", os.path.exists('backend'))
     logging.info("Backend minimal_app.py exists: %s", os.path.exists('backend/minimal_app.py'))
     
+    # Ensure backend is in Python path
+    backend_path = os.path.join(os.getcwd(), 'backend')
+    if backend_path not in sys.path:
+        sys.path.insert(0, backend_path)
+    
     # Import from backend directory where minimal_app.py is located
     from backend.minimal_app import app
     
@@ -38,12 +43,12 @@ try:
     @app.route('/healthz')
     def healthz():
         from flask import jsonify
-        return jsonify({"status": "ok"}), 200
+        return jsonify({"status": "ok", "app": "mdcan-bdm-2025"}), 200
 
     @app.route('/ready')
     def ready():
         from flask import jsonify
-        return jsonify({"ready": True}), 200
+        return jsonify({"ready": True, "version": "production"}), 200
     
     logging.info("✅ Additional health check routes added")
     
