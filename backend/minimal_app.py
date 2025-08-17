@@ -20,9 +20,19 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from werkzeug.utils import secure_filename
-import pdfkit
 from jinja2 import Template
 from threading import Thread
+
+# Optional dependencies with graceful fallback
+try:
+    import pdfkit
+    PDF_GENERATION_AVAILABLE = True
+    print("✅ PDF generation available (pdfkit imported successfully)")
+except ImportError as e:
+    print(f"⚠️  PDF generation not available: {e}")
+    print("   Continuing without PDF generation capability...")
+    pdfkit = None
+    PDF_GENERATION_AVAILABLE = False
 
 # Initialize Flask app
 app = Flask(__name__, 
@@ -1168,13 +1178,22 @@ def generate_certificate(participant_id):
             
         # Generate PDF
         try:
+            if not PDF_GENERATION_AVAILABLE:
+                return jsonify({
+                    "status": "error",
+                    "message": "PDF generation not available in this deployment. System packages may be missing.",
+                    "html_preview": html[:500] + "..." if len(html) > 500 else html,
+                    "available_features": ["registration", "admin_portal", "database"]
+                }), 503
+                
             pdf = pdfkit.from_string(html, False)
         except Exception as e:
             # For environments where wkhtmltopdf might not be available
             return jsonify({
                 "status": "error",
                 "message": f"Error generating PDF: {str(e)}. HTML version returned instead.",
-                "html": html
+                "html_preview": html[:500] + "..." if len(html) > 500 else html,
+                "troubleshooting": "This may indicate missing system dependencies like wkhtmltopdf"
             }), 500
             
         # Create a temporary file to serve
@@ -1477,11 +1496,20 @@ def send_certificate(participant_id):
         
         # Generate PDF
         try:
+            if not PDF_GENERATION_AVAILABLE:
+                return jsonify({
+                    "status": "error",
+                    "message": "PDF generation not available in this deployment. System packages may be missing.",
+                    "html_preview": html[:500] + "..." if len(html) > 500 else html,
+                    "available_features": ["registration", "admin_portal", "database"]
+                }), 503
+                
             pdf = pdfkit.from_string(html, False)
         except Exception as e:
             return jsonify({
                 "status": "error",
-                "message": f"Error generating PDF: {str(e)}"
+                "message": f"Error generating PDF: {str(e)}",
+                "troubleshooting": "This may indicate missing system dependencies like wkhtmltopdf"
             }), 500
             
         # Create a temporary file for the PDF

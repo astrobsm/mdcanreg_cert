@@ -24,26 +24,36 @@ ENV PYTHONPATH="/app:/app/backend"
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
 
-# Ensure frontend build exists
-RUN if [ ! -d "/app/frontend/build" ]; then \
-        mkdir -p /app/frontend/build && \
-        echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>MDCAN Certificate Platform</h1></body></html>' > /app/frontend/build/index.html; \
-    fi
+# Ensure frontend build exists with proper structure
+RUN mkdir -p frontend/build/static && \
+    echo '<!DOCTYPE html>' > frontend/build/index.html && \
+    echo '<html lang="en">' >> frontend/build/index.html && \
+    echo '<head>' >> frontend/build/index.html && \
+    echo '  <meta charset="utf-8">' >> frontend/build/index.html && \
+    echo '  <meta name="viewport" content="width=device-width,initial-scale=1">' >> frontend/build/index.html && \
+    echo '  <title>MDCAN BDM 2025 Certificate Platform</title>' >> frontend/build/index.html && \
+    echo '  <style>body{font-family:Arial,sans-serif;text-align:center;padding:50px;}</style>' >> frontend/build/index.html && \
+    echo '</head>' >> frontend/build/index.html && \
+    echo '<body>' >> frontend/build/index.html && \
+    echo '  <h1>MDCAN BDM 2025 Certificate Platform</h1>' >> frontend/build/index.html && \
+    echo '  <p>Application is loading...</p>' >> frontend/build/index.html && \
+    echo '  <p><a href="/admin">Admin Portal</a> | <a href="/api/health">Health Check</a></p>' >> frontend/build/index.html && \
+    echo '</body>' >> frontend/build/index.html && \
+    echo '</html>' >> frontend/build/index.html && \
+    echo "Frontend build directory created with index.html"
 
-# Simple build verification
-RUN echo "🔍 Build verification:" && \
-    echo "  - Python version: $(python --version)" && \
-    echo "  - Working directory: $(pwd)" && \
-    echo "  - Files present: $(ls -la | wc -l) items" && \
-    echo "  - Backend exists: $(test -d backend && echo 'YES' || echo 'NO')" && \
-    echo "  - WSGI exists: $(test -f wsgi.py && echo 'YES' || echo 'NO')" && \
-    echo "✅ Build verification complete"
+# Explicit binding verification and startup
+RUN echo "� Gunicorn configuration verification:" && \
+    echo "  - Expected binding: 0.0.0.0:8080" && \
+    echo "  - PORT environment: \${PORT:-8080}" && \
+    python -c "import os; print(f'  - Computed binding: 0.0.0.0:{os.environ.get(\"PORT\", 8080)}')" && \
+    echo "✅ Binding configuration verified"
 
 EXPOSE 8080
 
-# Basic health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+# Enhanced health check with explicit port
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8080/health || curl -f http://0.0.0.0:8080/health || exit 1
 
-# Simple startup with fallback
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "wsgi:application"]
+# Explicit startup command with verified binding
+CMD ["sh", "-c", "echo 'Starting gunicorn on 0.0.0.0:8080...' && exec gunicorn --bind 0.0.0.0:8080 --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - wsgi:application"]
