@@ -104,11 +104,9 @@ python optimize_database.py
 ./optimize-assets.bat
 ```
 
-3. Deploy the optimized build to Vercel using:
-
-```bash
-vercel --prod
-```
+3. Deploy to DigitalOcean App Platform:
+   - Push changes to GitHub repository
+   - DigitalOcean will automatically build and deploy
 
 ## Performance Metrics
 

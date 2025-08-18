@@ -8,7 +8,7 @@ This is a full-stack certificate generation platform for the MDCAN BDM 14th - 20
 - Frontend: React.js application for participant management and certificate preview
 - Backend: Python Flask API for certificate generation and email delivery
 - Database: PostgreSQL for storing participant information
-- Deployment: Configured for Vercel
+- Deployment: Configured for DigitalOcean App Platform
 
 ## Key Components
 - Certificate generation using HTML-to-PDF conversion

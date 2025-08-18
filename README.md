@@ -23,7 +23,7 @@ A full-stack web application that automatically generates and emails certificate
 - **Database**: PostgreSQL
 - **PDF Generation**: pdfkit with wkhtmltopdf
 - **Email**: SMTP (Gmail supported)
-- **Deployment**: Docker, Digital Ocean, Vercel
+- **Deployment**: Docker, DigitalOcean App Platform
 
 ## Setup Instructions
 
@@ -220,31 +220,6 @@ Place the signature images in the `public` directory:
 For detailed deployment instructions, see:
 - [DOCKER-COMPOSE-DEPLOYMENT.md](DOCKER-COMPOSE-DEPLOYMENT.md) - Deploy using Docker Compose on Digital Ocean
 - [DIGITAL-OCEAN-DEPLOYMENT.md](DIGITAL-OCEAN-DEPLOYMENT.md) - Deploy directly on Digital Ocean
-
-### Deployment to Vercel
-
-1. Install Vercel CLI:
-```bash
-npm i -g vercel
-```
-
-2. Login to Vercel:
-```bash
-vercel login
-```
-
-3. Set environment variables in Vercel dashboard:
-   - `DATABASE_URL`
-   - `EMAIL_HOST`
-   - `EMAIL_PORT`
-   - `EMAIL_USER`
-   - `EMAIL_PASSWORD`
-   - `EMAIL_FROM`
-
-4. Deploy:
-```bash
-vercel
-```
 
 ## Usage
 

@@ -61,7 +61,7 @@ echo };>> webpack.config.js
 echo.
 echo Step 3: Setting up environment for production...
 echo GENERATE_SOURCEMAP=false> .env.production.local
-echo REACT_APP_API_URL=https://api.mdcan-bdm2025.vercel.app>> .env.production.local
+echo REACT_APP_API_URL=https://mdcanbdm042-2025-mdcanreg-cert.ondigitalocean.app>> .env.production.local
 
 echo.
 echo Step 4: Building optimized production bundle...

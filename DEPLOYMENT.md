@@ -16,29 +16,31 @@
 6. Copy `.env.example` to `.env` and configure
 7. Run server: `python app.py`
 
-## Deployment to Vercel
+## Deployment to DigitalOcean App Platform
 
 ### Prerequisites
-- Vercel account
-- PostgreSQL database (recommended: Vercel Postgres)
+- DigitalOcean account
+- PostgreSQL database (DigitalOcean Managed Database)
 - Email service (Gmail with App Password recommended)
 
 ### Steps
-1. Install Vercel CLI: `npm install -g vercel`
-2. Login to Vercel: `vercel login`
-3. Set up environment variables in Vercel dashboard:
+1. Fork/clone this repository to GitHub
+2. Connect GitHub repository to DigitalOcean App Platform
+3. Configure app.yaml with environment variables:
    - `DATABASE_URL`: Your PostgreSQL connection string
    - `EMAIL_HOST`: smtp.gmail.com
    - `EMAIL_PORT`: 587
    - `EMAIL_USER`: your-email@gmail.com
    - `EMAIL_PASSWORD`: your-app-password
    - `EMAIL_FROM`: MDCAN BDM 2025 <your-email@gmail.com>
+   - `ADMIN_PASSWORD`: Strong password for admin access
+   - `SECRET_KEY`: Random secret key for Flask sessions
 
-4. Deploy: `vercel`
+4. Deploy using DigitalOcean App Platform
 
 ### Database Setup
-1. Create PostgreSQL database
-2. Update `DATABASE_URL` environment variable
+1. Create DigitalOcean Managed PostgreSQL database
+2. Update `DATABASE_URL` environment variable in app.yaml
 3. The application will automatically create required tables
 
 ### Signature Images

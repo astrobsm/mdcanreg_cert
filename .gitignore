@@ -66,6 +66,3 @@ tmp/
 # PDF files (generated certificates)
 certificates/
 *.pdf
-
-# Vercel
-.vercel
