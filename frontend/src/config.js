@@ -21,8 +21,8 @@ const config = {
     TIMEOUT: 5000, // 5 seconds
   },
   production: {
-    // Backend is hosted on Digital Ocean
-    API_URL: 'https://mdcanbdm042-2025-tdlv8.ondigitalocean.app',
+    // Backend is served from the same domain as frontend - use relative URL
+    API_URL: '',  // Empty string means same origin (relative URLs)
     DEBUG: false,
     TIMEOUT: 30000, // 30 seconds
   }
