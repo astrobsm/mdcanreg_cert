@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WSGI Entry Point for Digital Ocean App Platform
-Simplified, robust entry point for production deployment
+WSGI Entry Point for DigitalOcean App Platform
+Simplified and robust entry point for production deployment
 """
 import os
 import sys
@@ -10,44 +10,76 @@ import logging
 # Configure logging for production
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
+
+logger = logging.getLogger(__name__)
 
 # Set Python path
 app_dir = os.path.dirname(os.path.abspath(__file__))
-if app_dir not in sys.path:
-    sys.path.insert(0, app_dir)
-
 backend_dir = os.path.join(app_dir, 'backend')
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
 
-# Log startup information
-logging.info(f"Starting MDCAN BDM 2025 Application from {app_dir}")
-logging.info(f"Python path: {sys.path[:3]}...")  # Log first 3 entries
+for path in [app_dir, backend_dir]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
-# Environment variables check
-port = os.environ.get('PORT', 'not set')
-database_url = os.environ.get('DATABASE_URL', 'not configured')
-admin_password = os.environ.get('ADMIN_PASSWORD', 'not configured')
-email_host = os.environ.get('EMAIL_HOST', 'not configured')
+logger.info(f"🚀 Starting MDCAN BDM 2025 Application")
+logger.info(f"📁 App directory: {app_dir}")
+logger.info(f"🐍 Python version: {sys.version}")
 
-logging.info(f"Environment: PORT={port}")
-logging.info(f"Database URL: {'configured' if database_url != 'not configured' else 'NOT CONFIGURED'}")
-logging.info(f"Admin Password: {'configured' if admin_password != 'not configured' else 'NOT CONFIGURED'}")
-logging.info(f"Email Host: {'configured' if email_host != 'not configured' else 'NOT CONFIGURED'}")
+# Environment check
+env_vars = {
+    'PORT': os.environ.get('PORT', 'not set'),
+    'DATABASE_URL': 'configured' if os.environ.get('DATABASE_URL') else 'NOT SET',
+    'ADMIN_PASSWORD': 'configured' if os.environ.get('ADMIN_PASSWORD') else 'NOT SET',
+    'EMAIL_HOST': os.environ.get('EMAIL_HOST', 'not set')
+}
 
-# Check for critical missing environment variables
-missing_vars = []
-if database_url == 'not configured':
-    missing_vars.append('DATABASE_URL')
-if admin_password == 'not configured':
-    missing_vars.append('ADMIN_PASSWORD')
+for key, value in env_vars.items():
+    logger.info(f"🔧 {key}: {value}")
 
-if missing_vars:
-    logging.warning(f"⚠️ Missing critical environment variables: {', '.join(missing_vars)}")
-else:
-    logging.info("✅ All critical environment variables are configured")
+try:
+    # Import the Flask application
+    logger.info("📦 Importing backend.minimal_app...")
+    from backend.minimal_app import app
+    
+    logger.info("✅ Application imported successfully")
+    logger.info(f"📋 App name: {app.name}")
+    
+    # Test basic app functionality
+    with app.app_context():
+        logger.info("🧪 Testing application context...")
+        logger.info("✅ Application context is working")
+    
+    # Export for gunicorn
+    application = app
+    
+except Exception as e:
+    logger.error(f"❌ Failed to import application: {e}")
+    import traceback
+    traceback.print_exc()
+    
+    # Create a minimal error application
+    from flask import Flask, jsonify
+    app = Flask(__name__)
+    
+    @app.route('/')
+    @app.route('/health')
+    def error_response():
+        return jsonify({
+            "status": "error",
+            "message": f"Application failed to start: {str(e)}",
+            "app_dir": app_dir,
+            "python_path": sys.path[:3]
+        }), 500
+    
+    application = app
+
+if __name__ == "__main__":
+    port = int(os.environ.get('PORT', 8080))
+    logger.info(f"🌐 Starting development server on 0.0.0.0:{port}")
+    application.run(host='0.0.0.0', port=port, debug=False)
 
 try:
     # Import the main application

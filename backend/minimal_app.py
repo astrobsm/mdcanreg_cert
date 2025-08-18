@@ -153,43 +153,63 @@ if not static_folder:
     static_folder = 'static' if os.path.exists('static') else None
     FRONTEND_BUILD_FOLDER = static_folder
 
-# Configure database connection
+# Configure database connection with enhanced error handling
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///mdcan_certificates.db')
 
-# Handle Digital Ocean managed database URL
+print(f"🔗 Configuring database connection...")
+
+# Handle Digital Ocean managed database URL format
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    print("🔧 Converted postgres:// to postgresql:// for compatibility")
 
-# For Digital Ocean, ensure proper SSL configuration in URL if not present
-if 'postgresql://' in DATABASE_URL and 'sslmode' not in DATABASE_URL:
-    separator = '&' if '?' in DATABASE_URL else '?'
-    DATABASE_URL = f"{DATABASE_URL}{separator}sslmode=prefer"
+# For Digital Ocean PostgreSQL, ensure proper SSL configuration
+if 'postgresql://' in DATABASE_URL:
+    if 'sslmode' not in DATABASE_URL:
+        separator = '&' if '?' in DATABASE_URL else '?'
+        DATABASE_URL = f"{DATABASE_URL}{separator}sslmode=require"
+        print("🔒 Added SSL requirement to PostgreSQL connection")
+    
+    # Ensure we're using the correct SSL mode for DigitalOcean
+    if 'sslmode=prefer' in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace('sslmode=prefer', 'sslmode=require')
+        print("🔒 Upgraded SSL mode from 'prefer' to 'require' for DigitalOcean")
 
-print(f"Database URL configured (sanitized): {DATABASE_URL.split('@')[0]}@***")
+print(f"Database URL configured (sanitized): {DATABASE_URL.split('@')[0] if '@' in DATABASE_URL else 'local'}@***")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Enhanced SSL configuration for production database
-# Use environment variables for pool configuration
-pool_size = int(os.environ.get('DB_POOL_SIZE', 3))
-max_overflow = int(os.environ.get('DB_MAX_OVERFLOW', 5))
+# Enhanced database connection configuration for DigitalOcean
+pool_size = int(os.environ.get('DB_POOL_SIZE', 2))  # Reduced for smaller instances
+max_overflow = int(os.environ.get('DB_MAX_OVERFLOW', 3))
 
 engine_options = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
     'pool_size': pool_size,
-    'max_overflow': max_overflow
+    'max_overflow': max_overflow,
+    'pool_timeout': 30,
+    'connect_args': {}
 }
 
-# Add minimal SSL configuration for PostgreSQL
+# Add SSL configuration for PostgreSQL connections
 if 'postgresql://' in DATABASE_URL:
-    print("Using PostgreSQL with automatic SSL configuration")
+    print("🐘 Using PostgreSQL with SSL configuration")
+    engine_options['connect_args'] = {
+        'sslmode': 'require',
+        'connect_timeout': 30
+    }
     
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
-# Initialize database
-db = SQLAlchemy(app)
+# Initialize database with error handling
+try:
+    db = SQLAlchemy(app)
+    print("✅ SQLAlchemy initialized successfully")
+except Exception as e:
+    print(f"❌ Failed to initialize SQLAlchemy: {e}")
+    raise
 
 # Define database models
 class Participant(db.Model):

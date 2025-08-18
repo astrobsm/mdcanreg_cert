@@ -21,7 +21,7 @@ services:
     repo: astrobsm/mdcanreg_cert
   http_port: 8080
   instance_count: 1
-  instance_size_slug: apps-s-1vcpu-512mb-1gb
+  instance_size_slug: apps-s-2vcpu-4gb
   name: mdcanreg-cert
   source_dir: /
   envs:
@@ -32,30 +32,30 @@ services:
     scope: RUN_TIME
     value: ${astrobsmvelvet-db.DATABASE_URL}
   - key: FLASK_ENV
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     value: production
   - key: SECRET_KEY
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     type: SECRET
     value: EV[1:VdXj7F9sK2mL8nP4Q6rT1wY3zA5bC8eG:xM9nQ6rT1wY3zA5bC8eGhJ4kL7mP0sV2uX8yA1bD4fH6i9lN2oR5tW8z]
   - key: ADMIN_PASSWORD
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     type: SECRET
     value: EV[1:A3dM8nQ6rT1wY3zA5bC8eG:K7mP0sV2uX8yA1bD4fH6i9lN2oR5tW8zB5cF8hJ1kM4n]
   - key: EMAIL_HOST
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     value: smtp.gmail.com
   - key: EMAIL_PORT
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     value: "587"
   - key: EMAIL_USER
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     value: mdcanenugu@gmail.com
   - key: EMAIL_PASSWORD
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     type: SECRET
     value: EV[1:Orzjes4NjWQpKh+uzahH7F/LPIG+JhO6:2f4gbw3X+yomf77NYOSDiECfI97hbek0NdPSRmgwXTD4ddE=]
   - key: EMAIL_FROM
-    scope: RUN_AND_BUILD_TIME
+    scope: RUN_TIME
     type: SECRET
     value: EV[1:IUO26D59WkVP+axQBnQUNLwB/pcllViK:DuOr4bod92jmKgw/ZjXpIaeCMWv8VILqon7IbHa6bSk+pyXNmgFHysF3CE+HY7CQA8yhfXM=]
