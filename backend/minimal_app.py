@@ -1380,7 +1380,7 @@ def generate_certificate(participant_id):
             
         # Generate PDF
         try:
-            if not PDF_GENERATION_AVAILABLE:
+            if not globals().get('PDF_GENERATION_AVAILABLE', False):
                 return jsonify({
                     "status": "error",
                     "message": "PDF generation not available in this deployment. System packages may be missing.",
@@ -1768,7 +1768,7 @@ def send_certificate(participant_id):
         
         # Generate PDF
         try:
-            if not PDF_GENERATION_AVAILABLE:
+            if not globals().get('PDF_GENERATION_AVAILABLE', False):
                 print("[CERTIFICATE] PDF generation not available")
                 return jsonify({
                     "status": "error",
@@ -2214,7 +2214,7 @@ def test_certificate(participant_id):
             )
         
         # Test PDF generation
-        if PDF_GENERATION_AVAILABLE:
+        if globals().get('PDF_GENERATION_AVAILABLE', False):
             try:
                 pdf = pdfkit.from_string(html, False, configuration=PDF_CONFIG)
                 print(f"[TEST-CERT] PDF generated successfully, size: {len(pdf)} bytes")
@@ -2240,7 +2240,7 @@ def test_certificate(participant_id):
             "pdf_generation": {
                 "status": pdf_status,
                 "size_bytes": pdf_size,
-                "available": PDF_GENERATION_AVAILABLE
+                "available": globals().get('PDF_GENERATION_AVAILABLE', False)
             },
             "email_config": {
                 "configured": bool(EMAIL_HOST and EMAIL_USER and EMAIL_PASSWORD),
