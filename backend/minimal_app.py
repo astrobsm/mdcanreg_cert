@@ -1684,8 +1684,20 @@ def send_certificate(participant_id):
         current_date = now.date()
         current_time = now.time()
         
-        # Allow sending today (August 17, 2025) anytime
-        today_allowed = datetime(2025, 8, 17).date()
+        # Allow sending today (August 18, 2025) anytime for testing
+        today_allowed = datetime(2025, 8, 18).date()
+        
+        # Allow sending from September 5, 2025 at 5:00 PM onwards
+        conference_start = datetime(2025, 9, 5, 17, 0, 0)  # September 5, 2025 at 5:00 PM
+        
+        # Check certificate sending schedule
+        now = datetime.now()
+        current_date = now.date()
+        current_time = now.time()
+        
+        # Allow sending during August 2025 (entire month for testing)
+        august_2025_start = datetime(2025, 8, 1).date()
+        august_2025_end = datetime(2025, 8, 31).date()
         
         # Allow sending from September 5, 2025 at 5:00 PM onwards
         conference_start = datetime(2025, 9, 5, 17, 0, 0)  # September 5, 2025 at 5:00 PM
@@ -1693,10 +1705,10 @@ def send_certificate(participant_id):
         sending_allowed = False
         restriction_message = ""
         
-        if current_date == today_allowed:
-            # Today is allowed anytime
+        if august_2025_start <= current_date <= august_2025_end:
+            # August 2025 testing period
             sending_allowed = True
-            print(f"[CERTIFICATE] Sending allowed - Today ({current_date}) is the testing day")
+            print(f"[CERTIFICATE] Sending allowed - August 2025 testing period ({current_date})")
         elif now >= conference_start:
             # After conference start time
             sending_allowed = True
@@ -2148,18 +2160,19 @@ def test_certificate(participant_id):
         now = datetime.now()
         current_date = now.date()
         
-        # Allow testing today (August 17, 2025) anytime
-        today_allowed = datetime(2025, 8, 17).date()
+        # Allow testing during August 2025 (entire month for testing)
+        august_2025_start = datetime(2025, 8, 1).date()
+        august_2025_end = datetime(2025, 8, 31).date()
         
         # Allow testing from September 5, 2025 at 5:00 PM onwards
         conference_start = datetime(2025, 9, 5, 17, 0, 0)  # September 5, 2025 at 5:00 PM
         
         testing_allowed = False
         
-        if current_date == today_allowed:
-            # Today is allowed anytime
+        if august_2025_start <= current_date <= august_2025_end:
+            # August 2025 testing period
             testing_allowed = True
-            print(f"[TEST-CERT] Testing allowed - Today ({current_date}) is the testing day")
+            print(f"[TEST-CERT] Testing allowed - August 2025 testing period ({current_date})")
         elif now >= conference_start:
             # After conference start time
             testing_allowed = True
