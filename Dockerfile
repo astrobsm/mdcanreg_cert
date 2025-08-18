@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
@@ -6,6 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better Docker layer caching
@@ -30,9 +31,9 @@ RUN mkdir -p frontend/build/static && \
 
 EXPOSE 8080
 
-# Simple health check (no startup script dependency)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+# Simple health check (increased timeout for startup)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Direct start command (no startup script to avoid complexity)
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "wsgi:application"]
+# Direct start command optimized for DigitalOcean
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "wsgi:application"]

@@ -593,34 +593,55 @@ def health():
 
 @app.route('/health')
 def health_check():
-    """Simple health check endpoint for Digital Ocean load balancer"""
+    """Enhanced health check endpoint for Digital Ocean load balancer"""
     try:
-        # Basic validation that app is running
-        app_working = True
+        # Test database connectivity
+        db_status = "unknown"
+        try:
+            # Simple database query to test connection
+            with app.app_context():
+                db.session.execute(sa.text('SELECT 1'))
+                db_status = "connected"
+        except Exception as db_e:
+            db_status = f"error: {str(db_e)[:50]}"
         
-        # Test basic imports
+        # Check environment variables
+        env_check = {
+            "port": os.environ.get('PORT', 'not set'),
+            "database_configured": bool(os.environ.get('DATABASE_URL')),
+            "admin_configured": bool(os.environ.get('ADMIN_PASSWORD'))
+        }
+        
+        # Basic imports test
         try:
             import flask
             import sqlalchemy
-        except ImportError:
-            app_working = False
-        
-        if app_working:
+            import psycopg2
+            import gunicorn
+            
             return jsonify({
                 "status": "healthy",
                 "timestamp": datetime.utcnow().isoformat(),
-                "service": "mdcan-bdm-2025"
+                "service": "mdcan-bdm-2025",
+                "database": db_status,
+                "environment": env_check,
+                "python_version": sys.version.split()[0],
+                "flask_version": flask.__version__
             }), 200
-        else:
+            
+        except ImportError as ie:
             return jsonify({
                 "status": "unhealthy",
-                "message": "Core dependencies missing"
+                "message": f"Missing dependencies: {ie}",
+                "database": db_status,
+                "environment": env_check
             }), 503
             
     except Exception as e:
         return jsonify({
             "status": "error",
-            "message": str(e)
+            "message": str(e),
+            "timestamp": datetime.utcnow().isoformat()
         }), 500
 
 @app.route('/static/<path:filename>')
