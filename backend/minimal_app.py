@@ -343,9 +343,9 @@ def load_signature_file(filename):
         return ""
 
 # Load signature files at startup
-PRESIDENT_SIGNATURE = load_signature_file('president-signature.jpg')
+PRESIDENT_SIGNATURE = load_signature_file('president-signature.png')
 CHAIRMAN_SIGNATURE = load_signature_file('chairman-signature.png') 
-SECRETARY_SIGNATURE = load_signature_file('Dr_Augustine_Duru_signature.jpg')
+SECRETARY_SIGNATURE = load_signature_file('Dr_Augustine_Duru_signature.png')
 
 # Load logo file
 MDCAN_LOGO = load_signature_file('logo-mdcan.jpeg')
@@ -714,9 +714,9 @@ def serve_static_files(filename):
     """Serve signature files and other static assets"""
     # Define the files that should be served directly
     static_files = [
-        'president-signature.jpg',
+        'president-signature.png',
         'chairman-signature.png', 
-        'Dr_Augustine_Duru_signature.jpg',
+        'Dr_Augustine_Duru_signature.png',
         'logo-mdcan.jpeg',
         'certificate_background.png'
     ]
