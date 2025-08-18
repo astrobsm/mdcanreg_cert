@@ -1,3 +1,13 @@
+FROM node:18-slim AS frontend-builder
+
+# Build the React frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci --only=production
+COPY frontend/ ./
+RUN npm run build
+
+# Python backend stage
 FROM python:3.10-slim
 
 WORKDIR /app
@@ -16,14 +26,18 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application files
 COPY . .
 
+# Copy the built frontend from the builder stage
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
+
 # Set environment variables
 ENV PYTHONPATH="/app:/app/backend"
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
 
-# Create frontend build directory if it doesn't exist
-RUN mkdir -p frontend/build && \
-    echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>Loading...</h1></body></html>' > frontend/build/index.html
+# Verify frontend build exists
+RUN ls -la frontend/build/ && \
+    echo "Frontend build directory contents:" && \
+    find frontend/build -type f -name "*.html" -o -name "*.js" -o -name "*.css" | head -10
 
 EXPOSE 8080
 
