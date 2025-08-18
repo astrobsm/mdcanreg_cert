@@ -27,9 +27,9 @@ RUN mkdir -p frontend/build && \
 
 EXPOSE 8080
 
-# Health check with generous timeout
+# Health check with dynamic port
 HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
-# Start command using environment PORT variable
-CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120 --access-logfile - --error-logfile - wsgi:application
+# Start command using gunicorn configuration file
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "wsgi:application"]

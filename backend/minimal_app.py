@@ -33,6 +33,20 @@ try:
         print(f"  - PORT: {os.environ.get('PORT', 'not set')}")
         print(f"  - DATABASE_URL: {'configured' if os.environ.get('DATABASE_URL') else 'not configured'}")
         print(f"  - ADMIN_PASSWORD: {'configured' if os.environ.get('ADMIN_PASSWORD') else 'not configured'}")
+        print(f"  - EMAIL_HOST: {os.environ.get('EMAIL_HOST', 'not set')}")
+        
+        # Validate critical environment variables in production
+        missing_vars = []
+        if not os.environ.get('DATABASE_URL'):
+            missing_vars.append('DATABASE_URL')
+        if not os.environ.get('ADMIN_PASSWORD'):
+            missing_vars.append('ADMIN_PASSWORD')
+            
+        if missing_vars:
+            print(f"❌ CRITICAL: Missing environment variables: {', '.join(missing_vars)}")
+            print("   Application may fail to start properly")
+        else:
+            print("✅ All critical environment variables are configured")
     else:
         # Development environment - try to load .env file
         env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
