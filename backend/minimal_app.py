@@ -682,18 +682,31 @@ def health_check():
 def serve_static_assets(filename):
     """Serve static assets for production deployment"""
     try:
+        print(f"🔍 Requesting static file: {filename}")
+        
         # Try to serve from the frontend build static directory
-        static_path = os.path.join(FRONTEND_BUILD_FOLDER, 'static', filename)
-        if os.path.exists(static_path):
-            return send_file(static_path)
+        if FRONTEND_BUILD_FOLDER:
+            static_path = os.path.join(FRONTEND_BUILD_FOLDER, 'static', filename)
+            print(f"🔍 Checking static path: {static_path}")
+            
+            if os.path.exists(static_path):
+                print(f"✅ Found static file: {static_path}")
+                # Set proper MIME type
+                mimetype = mimetypes.guess_type(static_path)[0]
+                return send_file(static_path, mimetype=mimetype)
         
         # Fallback to project root static
         root_static_path = os.path.join(os.getcwd(), 'static', filename)
         if os.path.exists(root_static_path):
-            return send_file(root_static_path)
+            print(f"✅ Found fallback static file: {root_static_path}")
+            mimetype = mimetypes.guess_type(root_static_path)[0]
+            return send_file(root_static_path, mimetype=mimetype)
             
-        return "File not found", 404
+        print(f"❌ Static file not found: {filename}")
+        return "Static file not found", 404
+        
     except Exception as e:
+        print(f"❌ Error serving static file {filename}: {str(e)}")
         return f"Error serving static file: {str(e)}", 500
 
 @app.route('/<filename>')
@@ -2396,14 +2409,20 @@ def get_stats():
 def serve_react_app(path):
     """Serve the React application for all non-API routes"""
     try:
+        print(f"🔍 Serving React route: '{path}'")
+        
         # If it's an API request that doesn't match any endpoint, return 404
         if path.startswith('api/'):
+            print(f"❌ API endpoint not found: {path}")
             return jsonify({"error": "API endpoint not found"}), 404
             
         # For the root path or any other path, serve index.html
         if FRONTEND_BUILD_FOLDER and os.path.exists(FRONTEND_BUILD_FOLDER):
             index_path = os.path.join(FRONTEND_BUILD_FOLDER, 'index.html')
+            print(f"🔍 Checking index.html at: {index_path}")
+            
             if os.path.exists(index_path):
+                print(f"✅ Serving index.html for route: '{path}'")
                 return send_file(index_path)
             else:
                 print(f"❌ index.html not found at: {index_path}")
@@ -2413,7 +2432,7 @@ def serve_react_app(path):
             return "Frontend build folder not found.", 500
             
     except Exception as e:
-        print(f"Error serving React app: {e}")
+        print(f"❌ Error serving React app for path '{path}': {e}")
         return f"Error loading application: {str(e)}", 500
 
 # Initialize the application
