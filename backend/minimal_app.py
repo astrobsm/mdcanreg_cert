@@ -1,7 +1,7 @@
 """
 Enhanced minimal version of the backend app that provides core functionality
 without pandas/numpy dependencies for stable deployment.
-Version: 2.1.0 - Updated with transparent signatures (August 18, 2025)
+Version: 2.1.1 - Updated signature paths to prioritize build directory (August 18, 2025)
 """
 from flask import Flask, request, jsonify, send_file, render_template_string, send_from_directory, after_this_request
 from flask_cors import CORS
@@ -340,8 +340,12 @@ CERT_SERVICE_TEXT = "the successful hosting of the MEDICAL AND DENTAL CONSULTANT
 def load_signature_file(filename):
     """Load signature file and return base64 encoded string with proper MIME type"""
     try:
-        # Try multiple possible paths for the signature files
+        # Try multiple possible paths for the signature files - prioritize build directory for transparent versions
         possible_paths = [
+            f'build/{filename}',  # Priority: Build directory with transparent signatures
+            f'../build/{filename}',
+            f'./build/{filename}',
+            f'/app/build/{filename}',
             f'frontend/public/{filename}',
             f'backend/static/{filename}',
             f'../frontend/public/{filename}',
