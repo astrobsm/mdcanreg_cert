@@ -440,9 +440,9 @@ PARTICIPATION_CERTIFICATE_TEMPLATE = """
         }
         .signature img {
             max-height: 60px;
-            mix-blend-mode: multiply;
-            background: transparent;
-            filter: contrast(1.2) brightness(0.9);
+            background: transparent !important;
+            border: none;
+            opacity: 1;
         }
         .signature-name {
             font-weight: bold;
@@ -484,7 +484,7 @@ PARTICIPATION_CERTIFICATE_TEMPLATE = """
         
         <div class="footer">
             <div class="signature">
-                <img src="data:image/jpeg;base64,{{ president_signature }}" alt="President's Signature">
+                <img src="data:image/png;base64,{{ president_signature }}" alt="President's Signature">
                 <div class="signature-name">Prof. Aminu Mohammed</div>
                 <div class="signature-title">MDCAN President</div>
             </div>
@@ -556,9 +556,9 @@ SERVICE_CERTIFICATE_TEMPLATE = """
         }
         .signature img {
             max-height: 60px;
-            mix-blend-mode: multiply;
-            background: transparent;
-            filter: contrast(1.2) brightness(0.9);
+            background: transparent !important;
+            border: none;
+            opacity: 1;
         }
         .signature-name {
             font-weight: bold;

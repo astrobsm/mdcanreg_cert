@@ -3,8 +3,8 @@ import os
 from PIL import Image
 import numpy as np
 
-def make_transparent(image_path, output_path=None):
-    """Make white/light backgrounds transparent"""
+def make_transparent(image_path, output_path=None, threshold=245):
+    """Make white/light backgrounds transparent with improved algorithm"""
     if output_path is None:
         name, ext = os.path.splitext(image_path)
         output_path = f"{name}_transparent{ext}"
@@ -23,17 +23,35 @@ def make_transparent(image_path, output_path=None):
             
             # Define white/light color threshold
             # Pixels with RGB values above this threshold will be made transparent
-            threshold = 240  # Adjust this value as needed (0-255)
+            print(f"Using threshold: {threshold} (adjust if needed)")
             
             # Create transparency mask
-            # Make pixels transparent if they are close to white
             red, green, blue, alpha = data[:,:,0], data[:,:,1], data[:,:,2], data[:,:,3]
             
-            # Identify pixels that are close to white/light gray
+            # Method 1: Simple white detection
             light_pixels = (red > threshold) & (green > threshold) & (blue > threshold)
             
-            # Make light pixels transparent
-            data[light_pixels] = [255, 255, 255, 0]  # White but fully transparent
+            # Method 2: Also detect light gray/near-white pixels
+            gray_threshold = threshold - 10
+            light_gray_pixels = (
+                (red > gray_threshold) & (green > gray_threshold) & (blue > gray_threshold) &
+                (abs(red.astype(int) - green.astype(int)) < 15) &  # Similar RGB values
+                (abs(red.astype(int) - blue.astype(int)) < 15) &
+                (abs(green.astype(int) - blue.astype(int)) < 15)
+            )
+            
+            # Combine both methods
+            pixels_to_transparent = light_pixels | light_gray_pixels
+            
+            # Count what we're changing
+            total_transparent = np.sum(pixels_to_transparent)
+            total_pixels = data.shape[0] * data.shape[1]
+            percent_transparent = (total_transparent / total_pixels) * 100
+            
+            print(f"Making {total_transparent:,} pixels transparent ({percent_transparent:.1f}% of image)")
+            
+            # Make selected pixels transparent
+            data[pixels_to_transparent] = [255, 255, 255, 0]  # White but fully transparent
             
             # Create new image from modified data
             new_img = Image.fromarray(data, 'RGBA')
