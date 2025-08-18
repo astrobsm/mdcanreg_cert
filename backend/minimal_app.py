@@ -611,7 +611,7 @@ def health():
             "database": db_status,
             "environment": os.environ.get('FLASK_ENV', 'development'),
             "port": os.environ.get('PORT', '8080'),
-            "pdf_generation": PDF_GENERATION_AVAILABLE,
+            "pdf_generation": globals().get('PDF_GENERATION_AVAILABLE', False),
             "frontend_build": bool(FRONTEND_BUILD_FOLDER and os.path.exists(FRONTEND_BUILD_FOLDER)),
             "deployment": "DIGITAL_OCEAN_TARGETED_FIXES_v3"
         }
