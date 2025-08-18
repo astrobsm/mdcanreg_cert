@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Signature Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .signature-test {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .signature-test img {
+            max-width: 300px;
+            max-height: 100px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+        }
+        .signature-on-white {
+            background: white;
+        }
+        .signature-on-gray {
+            background: #f0f0f0;
+        }
+        .signature-on-blue {
+            background: #e6f3ff;
+        }
+        .test-button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #005a8b;
+        }
+    </style>
+</head>
+<body>
+    <h1>MDCAN Certificate Signature Transparency Test</h1>
+    
+    <div class="signature-test">
+        <h2>President Signature (Prof. Aminu Mohammed)</h2>
+        <div class="signature-on-white">
+            <p><strong>On White Background:</strong></p>
+            <img src="president-signature.png" alt="President Signature on White">
+        </div>
+        <div class="signature-on-gray">
+            <p><strong>On Gray Background:</strong></p>
+            <img src="president-signature.png" alt="President Signature on Gray">
+        </div>
+        <div class="signature-on-blue">
+            <p><strong>On Blue Background:</strong></p>
+            <img src="president-signature.png" alt="President Signature on Blue">
+        </div>
+    </div>
+
+    <div class="signature-test">
+        <h2>Chairman Signature (Prof. Appolos Ndukuba)</h2>
+        <div class="signature-on-white">
+            <p><strong>On White Background:</strong></p>
+            <img src="build/chairman-signature.png" alt="Chairman Signature on White">
+        </div>
+        <div class="signature-on-gray">
+            <p><strong>On Gray Background:</strong></p>
+            <img src="build/chairman-signature.png" alt="Chairman Signature on Gray">
+        </div>
+        <div class="signature-on-blue">
+            <p><strong>On Blue Background:</strong></p>
+            <img src="build/chairman-signature.png" alt="Chairman Signature on Blue">
+        </div>
+    </div>
+
+    <div class="signature-test">
+        <h2>Secretary Signature (Dr. Augustine Duru)</h2>
+        <div class="signature-on-white">
+            <p><strong>On White Background:</strong></p>
+            <img src="build/Dr_Augustine_Duru_signature.png" alt="Secretary Signature on White">
+        </div>
+        <div class="signature-on-gray">
+            <p><strong>On Gray Background:</strong></p>
+            <img src="build/Dr_Augustine_Duru_signature.png" alt="Secretary Signature on Gray">
+        </div>
+        <div class="signature-on-blue">
+            <p><strong>On Blue Background:</strong></p>
+            <img src="build/Dr_Augustine_Duru_signature.png" alt="Secretary Signature on Blue">
+        </div>
+    </div>
+
+    <div class="signature-test">
+        <h2>Certificate Generation Test</h2>
+        <button class="test-button" onclick="testCertificate()">Generate Test Certificate</button>
+        <button class="test-button" onclick="window.open('http://localhost:8080', '_blank')">Open Backend Admin</button>
+        
+        <div id="certificate-result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        async function testCertificate() {
+            const resultDiv = document.getElementById('certificate-result');
+            resultDiv.innerHTML = '<p>Generating test certificate...</p>';
+            
+            try {
+                // Use the existing test endpoint with a test participant ID
+                const response = await fetch('http://localhost:8080/api/test-certificate/1', {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    resultDiv.innerHTML = `
+                        <p><strong>✅ Certificate generated successfully!</strong></p>
+                        <a href="${url}" target="_blank" style="display: inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">View Certificate PDF</a>
+                        <p><em>This test certificate shows how the signatures appear on the final PDF.</em></p>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<p><strong>❌ Error:</strong> ${error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p><strong>❌ Error:</strong> ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
