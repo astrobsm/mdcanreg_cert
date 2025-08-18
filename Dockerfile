@@ -2,80 +2,37 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install essential system dependencies and runtime libraries
+# Install minimal system dependencies for DigitalOcean deployment
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # PostgreSQL dependencies
-    libpq-dev \
     libpq5 \
-    postgresql-client \
-    # Build dependencies
-    gcc \
-    g++ \
-    python3-dev \
-    build-essential \
-    pkg-config \
-    # Runtime libraries
-    libc6-dev \
-    libssl-dev \
-    libffi-dev \
-    zlib1g-dev \
-    # System utilities
     curl \
-    wget \
-    procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements first for better Docker layer caching
 COPY requirements.txt .
 
-# Install Python dependencies with proper handling of binary packages
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    # Install packages that might need compilation from source
-    pip install --no-cache-dir psycopg2-binary && \
-    # Install remaining dependencies
-    pip install --no-cache-dir -r requirements.txt && \
-    # Verify installation
-    python -c "import flask, flask_sqlalchemy, psycopg2, gunicorn; print('✅ All dependencies installed successfully')"
+# Install Python dependencies (optimized for DigitalOcean)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY . .
 
-# Make scripts executable
-RUN chmod +x startup_check.sh
-
-# Set environment variables
+# Set essential environment variables for DigitalOcean
 ENV PYTHONPATH="/app:/app/backend"
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
 ENV PORT=8080
-ENV PYTHONDONTWRITEBYTECODE=1
 
-# Create a working wkhtmltopdf stub (since PDF generation is optional)
-RUN echo '#!/bin/bash' > /usr/local/bin/wkhtmltopdf && \
-    echo 'echo "PDF generation is disabled in this container"' >> /usr/local/bin/wkhtmltopdf && \
-    echo 'exit 1' >> /usr/local/bin/wkhtmltopdf && \
-    chmod +x /usr/local/bin/wkhtmltopdf
-
-# Build frontend directory structure
+# Create basic frontend directory structure (if needed)
 RUN mkdir -p frontend/build/static && \
-    echo '<!DOCTYPE html>' > frontend/build/index.html && \
-    echo '<html lang="en">' >> frontend/build/index.html && \
-    echo '<head><meta charset="utf-8"><title>MDCAN BDM 2025</title></head>' >> frontend/build/index.html && \
-    echo '<body><h1>MDCAN BDM 2025 Certificate Platform</h1><p>Loading...</p></body>' >> frontend/build/index.html && \
-    echo '</html>' >> frontend/build/index.html
-
-# Verify build configuration
-RUN echo "🔧 Build Verification:" && \
-    echo "  - Python: $(python --version)" && \
-    echo "  - Dependencies: $(pip list | wc -l) packages installed" && \
-    echo "  - Environment: ${FLASK_ENV}" && \
-    echo "  - Port: ${PORT}"
+    echo '<!DOCTYPE html><html><head><title>MDCAN BDM 2025</title></head><body><h1>Loading...</h1></body></html>' > frontend/build/index.html
 
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=5 \
-    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
+# Simple health check (no startup script dependency)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# Start with comprehensive checks
-CMD ["sh", "-c", "./startup_check.sh && echo '🚀 Starting MDCAN BDM 2025 Application' && exec gunicorn --config gunicorn.conf.py wsgi:application"]
+# Direct start command (no startup script to avoid complexity)
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "wsgi:application"]

@@ -1,33 +1,29 @@
 #!/usr/bin/env python3
 """
-CRITICAL: Production Gunicorn Configuration for Digital Ocean
-Explicit configuration to resolve binding and deployment issues
+Optimized Gunicorn Configuration for DigitalOcean App Platform
 """
 
 import os
-import sys
 
-# CRITICAL: Dynamic binding configuration for Digital Ocean
-bind = f"0.0.0.0:{os.environ.get('PORT', '8080')}"  # Use dynamic PORT from environment
-workers = 2  # Increased workers for better performance
+# Dynamic binding for DigitalOcean
+bind = f"0.0.0.0:{os.environ.get('PORT', '8080')}"
+
+# Resource configuration optimized for apps-s-2vcpu-4gb
+workers = 2
 worker_class = "sync"
-worker_connections = 1000
+timeout = 30
+keepalive = 2
+max_requests = 500
+max_requests_jitter = 50
 
-# CRITICAL: Timeout and lifecycle settings
-timeout = 120  # Increased for PDF generation
-keepalive = 5  # Increased keepalive
-max_requests = 1000  # Restart workers after 1000 requests
-max_requests_jitter = 100
-graceful_timeout = 30
-
-# CRITICAL: Memory and resource management
-worker_tmp_dir = "/dev/shm"  # Use memory for temporary files
-preload_app = True  # Preload for better memory usage
-
-# CRITICAL: Logging configuration for Digital Ocean visibility
+# Logging for DigitalOcean
 loglevel = "info"
-accesslog = "-"  # Log to stdout for Digital Ocean
-errorlog = "-"   # Log to stderr for Digital Ocean
+accesslog = "-"
+errorlog = "-"
+capture_output = True
+
+# Basic preload for faster startup
+preload_app = True
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 capture_output = True
 
