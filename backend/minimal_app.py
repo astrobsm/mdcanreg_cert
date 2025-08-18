@@ -341,19 +341,9 @@ def load_signature_file(filename):
     """Load signature file and return base64 encoded string with proper MIME type"""
     try:
         # Try multiple possible paths for the signature files - prioritize build directory for transparent versions
+        static_dir = os.path.join(os.path.dirname(__file__), 'static')
         possible_paths = [
-            f'build/{filename}',  # Priority: Build directory with transparent signatures
-            f'../build/{filename}',
-            f'./build/{filename}',
-            f'/app/build/{filename}',
-            f'frontend/public/{filename}',
-            f'backend/static/{filename}',
-            f'../frontend/public/{filename}',
-            f'./frontend/public/{filename}',
-            f'/app/frontend/public/{filename}',
-            f'/app/backend/static/{filename}',
-            f'public/{filename}',
-            f'static/{filename}',
+            os.path.join(static_dir, filename),  # Absolute path to backend/static
             filename
         ]
         
