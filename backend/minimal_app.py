@@ -2390,6 +2390,32 @@ def get_stats():
         print(f"Error in get_stats: {e}")
         return jsonify({"error": "Failed to fetch stats", "message": str(e)}), 500
 
+# Catch-all route for React Router (must be last)
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react_app(path):
+    """Serve the React application for all non-API routes"""
+    try:
+        # If it's an API request that doesn't match any endpoint, return 404
+        if path.startswith('api/'):
+            return jsonify({"error": "API endpoint not found"}), 404
+            
+        # For the root path or any other path, serve index.html
+        if FRONTEND_BUILD_FOLDER and os.path.exists(FRONTEND_BUILD_FOLDER):
+            index_path = os.path.join(FRONTEND_BUILD_FOLDER, 'index.html')
+            if os.path.exists(index_path):
+                return send_file(index_path)
+            else:
+                print(f"❌ index.html not found at: {index_path}")
+                return "Frontend not built. Please run 'npm run build' in the frontend directory.", 500
+        else:
+            print(f"❌ Frontend build folder not found: {FRONTEND_BUILD_FOLDER}")
+            return "Frontend build folder not found.", 500
+            
+    except Exception as e:
+        print(f"Error serving React app: {e}")
+        return f"Error loading application: {str(e)}", 500
+
 # Initialize the application
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 8080))  # Use 8080 for Digital Ocean compatibility
