@@ -1,6 +1,7 @@
 """
 Enhanced minimal version of the backend app that provides core functionality
 without pandas/numpy dependencies for stable deployment.
+Version: 2.1.0 - Updated with transparent signatures (August 18, 2025)
 """
 from flask import Flask, request, jsonify, send_file, render_template_string, send_from_directory, after_this_request
 from flask_cors import CORS
