@@ -22,6 +22,8 @@ from email import encoders
 from werkzeug.utils import secure_filename
 from jinja2 import Template
 from threading import Thread
+import signal
+import threading
 
 # Load environment variables - prioritize container environment over .env files
 try:
@@ -63,6 +65,36 @@ except Exception as e:
     print(f"⚠️ Failed to load .env file: {e} - using system environment variables")
 
 # Optional dependencies with graceful fallback
+def generate_pdf_with_timeout(html, config, options, timeout=30):
+    """Generate PDF with timeout to prevent hanging"""
+    result = {"pdf": None, "error": None}
+    
+    def pdf_worker():
+        try:
+            result["pdf"] = pdfkit.from_string(html, False, configuration=config, options=options)
+        except Exception as e:
+            result["error"] = str(e)
+    
+    # Start PDF generation in a separate thread
+    thread = threading.Thread(target=pdf_worker)
+    thread.daemon = True
+    thread.start()
+    
+    # Wait for completion or timeout
+    thread.join(timeout)
+    
+    if thread.is_alive():
+        # Thread is still running - timeout occurred
+        raise TimeoutError(f"PDF generation timed out after {timeout} seconds")
+    
+    if result["error"]:
+        raise Exception(result["error"])
+    
+    if result["pdf"] is None:
+        raise Exception("PDF generation failed without error message")
+    
+    return result["pdf"]
+
 try:
     import pdfkit
     
@@ -1778,7 +1810,25 @@ def send_certificate(participant_id):
                 }), 503
                 
             print("[CERTIFICATE] Generating PDF with pdfkit...")
-            pdf = pdfkit.from_string(html, False, configuration=PDF_CONFIG)
+            
+            # PDF generation options with timeout to prevent hanging
+            pdf_options = {
+                'page-size': 'A4',
+                'margin-top': '0.75in',
+                'margin-right': '0.75in', 
+                'margin-bottom': '0.75in',
+                'margin-left': '0.75in',
+                'encoding': "UTF-8",
+                'no-outline': None,
+                'enable-local-file-access': None,
+                'load-error-handling': 'ignore',
+                'load-media-error-handling': 'ignore',
+                'javascript-delay': 1000,  # 1 second delay for JS/CSS
+                'print-media-type': None
+            }
+            
+            # Generate PDF with 30-second timeout
+            pdf = generate_pdf_with_timeout(html, PDF_CONFIG, pdf_options, timeout=30)
             print(f"[CERTIFICATE] PDF generated successfully, size: {len(pdf)} bytes")
         except Exception as e:
             print(f"[CERTIFICATE] PDF generation error: {str(e)}")
