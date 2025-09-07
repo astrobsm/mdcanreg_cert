@@ -1787,8 +1787,21 @@ def send_certificate(participant_id):
     try:
         print(f"[CERTIFICATE] Starting certificate send for participant ID: {participant_id}")
         
-        # Use session.get() instead of deprecated query.get()
-        participant = db.session.get(Participant, participant_id)
+        # Check database connection before attempting to query
+        try:
+            # Use session.get() instead of deprecated query.get()
+            participant = db.session.get(Participant, participant_id)
+        except Exception as db_error:
+            print(f"[CERTIFICATE] Database connection error: {db_error}")
+            return jsonify({
+                "status": "error",
+                "message": "Database connection unavailable. Cannot retrieve participant information.",
+                "details": "The certificate generation service is temporarily unavailable due to database connectivity issues.",
+                "error_type": "database_connection_error",
+                "participant_id": participant_id,
+                "troubleshooting": "Please check the database connection settings and try again."
+            }), 503
+            
         if not participant:
             print(f"[CERTIFICATE] Participant not found with ID: {participant_id}")
             return jsonify({
