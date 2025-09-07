@@ -1737,6 +1737,50 @@ def get_participant_dashboard(email):
             "message": str(e)
         }), 500
 
+def send_email(recipient_email, subject, body, attachment_path=None):
+    """Send email with optional attachment"""
+    try:
+        if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASSWORD]):
+            print("[EMAIL] Email configuration incomplete")
+            return False
+            
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_FROM
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+        
+        # Add body
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Add attachment if provided
+        if attachment_path and os.path.exists(attachment_path):
+            with open(attachment_path, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+                
+            encoders.encode_base64(part)
+            
+            filename = os.path.basename(attachment_path)
+            part.add_header(
+                "Content-Disposition",
+                f"attachment; filename= {filename}",
+            )
+            msg.attach(part)
+        
+        # Send email
+        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+        server.starttls()
+        server.login(EMAIL_USER, EMAIL_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        
+        print(f"[EMAIL] Email sent successfully to {recipient_email}")
+        return True
+        
+    except Exception as e:
+        print(f"[EMAIL] Error sending email to {recipient_email}: {e}")
+        return False
+
 # Email certificate function
 @app.route('/api/send-certificate/<int:participant_id>', methods=['POST'])
 def send_certificate(participant_id):
