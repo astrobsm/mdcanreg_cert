@@ -304,7 +304,7 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
       <div className="signatures">
         <div className="signature">
           <img 
-            src="/president-signature.jpg" 
+            src="/president-signature.png" 
             alt="President Signature"
           />
           <div className="signature-name-preview">
@@ -386,7 +386,7 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
         
         <div className="signature">
           <img 
-            src="/Dr_Augustine_Duru_signature.jpg" 
+            src="/Dr_Augustine_Duru_signature.png" 
             alt="Secretary Signature"
           />
           <div className="signature-name-preview">
@@ -455,9 +455,9 @@ const CertificatePreview = ({ participantName = "[Participant's Name]" }) => {
         </p>
         <ul>
           <li><code>certificate_background.png</code> - Official certificate background</li>
-          <li><code>president-signature.jpg</code> - Prof. Aminu Mohammed's signature</li>
+          <li><code>president-signature.png</code> - Prof. Aminu Mohammed's signature</li>
           <li><code>chairman-signature.png</code> - Prof. Appolos Ndukuba's signature</li>
-          <li><code>Dr_Augustine_Duru_signature.jpg</code> - Dr. Augustine Duru's signature</li>
+          <li><code>Dr_Augustine_Duru_signature.png</code> - Dr. Augustine Duru's signature</li>
         </ul>
         <p>
           All images should be high-resolution PNG/JPG files with transparent backgrounds for best results.
