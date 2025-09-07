@@ -346,6 +346,26 @@ def load_signature_file(filename):
             os.path.join(static_dir, filename),  # Absolute path to backend/static
             filename
         ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                try:
+                    with open(path, 'rb') as f:
+                        image_data = f.read()
+                        # Determine MIME type
+                        if filename.lower().endswith('.png'):
+                            mime_type = 'image/png'
+                        elif filename.lower().endswith(('.jpg', '.jpeg')):
+                            mime_type = 'image/jpeg'
+                        else:
+                            mime_type = 'image/png'  # Default
+                        encoded = base64.b64encode(image_data).decode('utf-8')
+                        print(f"Loaded signature file: {path} ({len(image_data)} bytes, {mime_type})")
+                        return f"data:{mime_type};base64,{encoded}"
+                except Exception as e:
+                    print(f"Error reading signature file {path}: {e}")
+        print(f"Signature file {filename} not found or unreadable in backend/static. Returning empty string.")
+        # Optionally, return a placeholder transparent PNG if file is missing
+        return ""
         
         for path in possible_paths:
             if os.path.exists(path):
@@ -601,7 +621,11 @@ SERVICE_CERTIFICATE_TEMPLATE = """
             </div>
             
             <div class="signature">
-                <img src="data:image/jpeg;base64,{{ secretary_signature }}" alt="Secretary's Signature">
+                {% if secretary_signature %}
+                <img src="data:image/png;base64,{{ secretary_signature }}" alt="Secretary's Signature">
+                {% else %}
+                <div class="signature-missing">Secretary's Signature Not Available</div>
+                {% endif %}
                 <div class="signature-name">Dr. Augustine Duru</div>
                 <div class="signature-title">LOC Secretary<br/>MDCAN Sec. Gen.</div>
             </div>
@@ -1935,6 +1959,172 @@ def send_certificate(participant_id):
             "message": str(e),
             "participant_id": participant_id
         }), 500
+
+# Send all certificates endpoint
+@app.route('/api/send-all-certificates', methods=['POST'])
+def send_all_certificates():
+    try:
+        print("[BULK SEND] Starting bulk certificate send process")
+        
+        # Get all participants who haven't received certificates yet
+        participants = Participant.query.filter_by(cert_sent=False).all()
+        
+        if not participants:
+            return jsonify({
+                "status": "info",
+                "message": "No participants found who need certificates",
+                "count": 0
+            })
+        
+        print(f"[BULK SEND] Found {len(participants)} participants to send certificates to")
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        for participant in participants:
+            try:
+                print(f"[BULK SEND] Processing {participant.name} ({participant.email})")
+                
+                # Check certificate sending schedule (same logic as individual send)
+                now = datetime.now()
+                current_date = now.date()
+                
+                # Allow sending during August 2025 (entire month for testing)
+                august_2025_start = datetime(2025, 8, 1).date()
+                august_2025_end = datetime(2025, 8, 31).date()
+                
+                # Allow sending from September 5, 2025 at 5:00 PM onwards
+                conference_start = datetime(2025, 9, 5, 17, 0, 0)
+                
+                if not (august_2025_start <= current_date <= august_2025_end or now >= conference_start):
+                    print(f"[BULK SEND] Skipping {participant.name} - outside allowed time window")
+                    continue
+                
+                # Generate certificate based on type
+                if participant.cert_type == 'service':
+                    html = render_template_string(
+                        SERVICE_CERTIFICATE_TEMPLATE,
+                        name=participant.name,
+                        service_text=CERT_SERVICE_TEXT,
+                        certificate_id=participant.certificate_id,
+                        chairman_signature=CHAIRMAN_SIGNATURE,
+                        secretary_signature=SECRETARY_SIGNATURE,
+                        logo=MDCAN_LOGO
+                    )
+                else:
+                    html = render_template_string(
+                        PARTICIPATION_CERTIFICATE_TEMPLATE,
+                        name=participant.name,
+                        event_text=CERT_EVENT_TEXT,
+                        certificate_id=participant.certificate_id,
+                        president_signature=PRESIDENT_SIGNATURE,
+                        chairman_signature=CHAIRMAN_SIGNATURE,
+                        logo=MDCAN_LOGO
+                    )
+                
+                # Generate PDF
+                if not globals().get('PDF_GENERATION_AVAILABLE', False):
+                    print(f"[BULK SEND] PDF generation not available, skipping {participant.name}")
+                    error_count += 1
+                    errors.append(f"{participant.name}: PDF generation not available")
+                    continue
+                
+                # PDF generation options
+                pdf_options = {
+                    'page-size': 'A4',
+                    'margin-top': '0.75in',
+                    'margin-right': '0.75in', 
+                    'margin-bottom': '0.75in',
+                    'margin-left': '0.75in',
+                    'encoding': "UTF-8",
+                    'no-outline': None,
+                    'enable-local-file-access': None,
+                    'load-error-handling': 'ignore',
+                    'load-media-error-handling': 'ignore',
+                    'javascript-delay': 1000,
+                    'print-media-type': None
+                }
+                
+                # Generate PDF with timeout
+                pdf = generate_pdf_with_timeout(html, PDF_CONFIG, pdf_options, timeout=30)
+                
+                if not pdf:
+                    print(f"[BULK SEND] PDF generation failed for {participant.name}")
+                    error_count += 1
+                    errors.append(f"{participant.name}: PDF generation failed")
+                    continue
+                
+                # Create temporary file for email
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                temp_file.write(pdf)
+                temp_file.close()
+                
+                # Send email with certificate
+                cert_type_text = "Service" if participant.cert_type == 'service' else "Participation"
+                subject = f"MDCAN BDM 14th - 2025 Certificate of {cert_type_text}"
+                body = f"""
+Dear {participant.name},
+
+Please find attached your Certificate of {cert_type_text} for the MDCAN BDM 14th - 2025.
+
+Best regards,
+MDCAN BDM 2025 Organizing Committee
+"""
+                
+                # Send email
+                if send_email(participant.email, subject, body, temp_file.name):
+                    participant.cert_sent = True
+                    participant.cert_sent_date = datetime.utcnow()
+                    db.session.commit()
+                    success_count += 1
+                    print(f"[BULK SEND] Successfully sent certificate to {participant.name}")
+                else:
+                    error_count += 1
+                    errors.append(f"{participant.name}: Email sending failed")
+                    print(f"[BULK SEND] Failed to send certificate to {participant.name}")
+                
+                # Clean up temp file
+                try:
+                    os.unlink(temp_file.name)
+                except:
+                    pass
+                    
+            except Exception as e:
+                error_count += 1
+                errors.append(f"{participant.name}: {str(e)}")
+                print(f"[BULK SEND] Error processing {participant.name}: {e}")
+        
+        print(f"[BULK SEND] Bulk send completed. Success: {success_count}, Errors: {error_count}")
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Bulk certificate send completed",
+            "success_count": success_count,
+            "error_count": error_count,
+            "errors": errors[:10] if errors else []  # Limit error list to first 10
+        })
+        
+    except Exception as e:
+        print(f"[BULK SEND] Error in send_all_certificates: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+# Favicon route to prevent 404 errors
+@app.route('/favicon.ico')
+def favicon():
+    try:
+        # Try to serve favicon from static directory
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'favicon.ico',
+            mimetype='image/vnd.microsoft.icon'
+        )
+    except:
+        # If favicon doesn't exist, return a 204 No Content response
+        return '', 204
 
 # Bulk operations
 @app.route('/api/bulk/participants', methods=['POST'])
