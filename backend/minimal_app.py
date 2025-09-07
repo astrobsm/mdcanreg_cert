@@ -389,10 +389,34 @@ def load_signature_file(filename):
         print(f"Error loading signature file {filename}: {e}")
         return ""
 
-# Load signature files at startup
-PRESIDENT_SIGNATURE = load_signature_file('president-signature.png')
-CHAIRMAN_SIGNATURE = load_signature_file('chairman-signature.png') 
-SECRETARY_SIGNATURE = load_signature_file('Dr_Augustine_Duru_signature.png')
+# Load signature files at startup - using specific paths for better versions
+def load_signature_from_path(file_path):
+    """Load signature file from specific path"""
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                image_data = f.read()
+                if file_path.lower().endswith('.png'):
+                    mime_type = 'image/png'
+                elif file_path.lower().endswith(('.jpg', '.jpeg')):
+                    mime_type = 'image/jpeg'
+                else:
+                    mime_type = 'image/png'
+                encoded = base64.b64encode(image_data).decode('utf-8')
+                print(f"Loaded signature from: {file_path} ({len(image_data)} bytes, {mime_type})")
+                return encoded  # Return just the base64 string without data URL prefix
+        print(f"Warning: Signature file not found at {file_path}")
+        return ""
+    except Exception as e:
+        print(f"Error loading signature from {file_path}: {e}")
+        return ""
+
+# Load signatures from build directory for president and secretary, static for chairman
+build_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'build')
+static_dir = os.path.join(os.path.dirname(__file__), 'static')
+PRESIDENT_SIGNATURE = load_signature_from_path(os.path.join(build_dir, 'president-signature.png'))
+CHAIRMAN_SIGNATURE = load_signature_from_path(os.path.join(static_dir, 'chairman-signature.png'))
+SECRETARY_SIGNATURE = load_signature_from_path(os.path.join(build_dir, 'Dr_Augustine_Duru_signature.png'))
 
 # Load logo file
 MDCAN_LOGO = load_signature_file('logo-mdcan.jpeg')
