@@ -23,6 +23,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxtst6 \
     libxi6 \
     fontconfig \
+    libjpeg62-turbo \
+    libssl1.1 \
+    xfonts-75dpi \
+    xfonts-base \
+    libpng16-16 \
+    libjpeg-turbo8 \
     && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
     && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || apt-get install -f -y \
     && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
