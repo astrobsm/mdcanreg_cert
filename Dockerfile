@@ -13,26 +13,35 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Install system dependencies including wkhtmltopdf for PDF generation
+# Using a more robust approach for Debian Bullseye compatibility
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Basic system dependencies
     libpq5 \
     curl \
     wget \
+    ca-certificates \
+    # X11 and graphics dependencies for wkhtmltopdf
     xvfb \
     libfontconfig1 \
     libxrender1 \
     libxtst6 \
     libxi6 \
+    libx11-6 \
+    libxext6 \
     fontconfig \
+    fonts-dejavu-core \
+    # Image and SSL libraries
     libjpeg62-turbo \
-    libssl1.1 \
+    libpng16-16 \
+    libssl3 \
+    # Font packages
     xfonts-75dpi \
     xfonts-base \
-    libpng16-16 \
-    libjpeg-turbo8 \
-    && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || apt-get install -f -y \
-    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && rm -rf /var/lib/apt/lists/*
+    # Install wkhtmltopdf using apt (more reliable for Debian Bullseye)
+    && apt-get install -y wkhtmltopdf \
+    # Clean up
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Verify wkhtmltopdf installation
 RUN which wkhtmltopdf && wkhtmltopdf --version
