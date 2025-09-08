@@ -12,11 +12,24 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including wkhtmltopdf for PDF generation
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
+    wget \
+    xvfb \
+    libfontconfig1 \
+    libxrender1 \
+    libxtst6 \
+    libxi6 \
+    fontconfig \
+    && wget -q https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
+    && dpkg -i wkhtmltox_0.12.6.1-2.bullseye_amd64.deb || apt-get install -f -y \
+    && rm wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
+
+# Verify wkhtmltopdf installation
+RUN which wkhtmltopdf && wkhtmltopdf --version
 
 # Copy and install Python dependencies
 COPY requirements.txt .
@@ -33,6 +46,7 @@ COPY --from=frontend-builder /app/frontend/build ./frontend/build
 ENV PYTHONPATH="/app:/app/backend"
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
+ENV ENABLE_PDF_GENERATION=true
 
 # Verify frontend build exists
 RUN ls -la frontend/build/ && \
